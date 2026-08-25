@@ -36,6 +36,8 @@ public class TestTreiber {
                           int extras, double discount, double erwartet) {
 
         double price = Preisberechnung.calculatePrice(baseprice, specialprice, extraprice, extras, discount);
+        // double nie mit == vergleichen -> kleine Toleranz wegen Rundungsfehlern
+
         boolean ok = Math.abs(price - erwartet) < 0.001;
 
         System.out.printf("[%s] %-32s Soll=%9.2f  Ist=%9.2f%n",
