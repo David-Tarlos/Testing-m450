@@ -64,27 +64,7 @@ ist immer optional eine Fehlermeldung:
 | `assertNull` / `assertNotNull` | Null-Prüfung |
 | `assertSame` / `assertNotSame` | Identität (`==`) statt `equals` |
 | `assertArrayEquals` | Arrays elementweise |
-| `assertThrows` | eine Exception wird geworfen |
-| `assertAll` | mehrere Assertions als Gruppe |
 | `fail("...")` | Test bewusst rot machen |
-
-**`assertAll`** — mehrere Eigenschaften desselben Objekts prüfen und *alle*
-Fehler auf einmal sehen (sonst stoppt der Test bei der ersten Assertion):
-
-```java
-assertAll("Initialzustand",
-        () -> assertEquals("TEST-1", account.getId()),
-        () -> assertEquals(0, account.getBalance()),
-        () -> assertTrue(account.canTransact(0)));
-```
-
-**`assertThrows`** — Negativtests; liefert die Exception zurück, damit man auch
-die Meldung prüfen kann:
-
-```java
-var ex = assertThrows(ArithmeticException.class, () -> calculator.divide(10.0, 0.0));
-assertEquals("Division durch 0 ist nicht erlaubt", ex.getMessage());
-```
 
 *Im Repo:* `CalculatorTest`, `AccountTests`.
 
@@ -147,7 +127,6 @@ statt zehnmal fast dieselbe Testmethode zu schreiben.
 | `Assumptions` | `assumeTrue(os.startsWith("Windows"))` | umgebungsabhängige Tests *überspringen* (grau) statt rot färben; ebenso `@EnabledOnOs` |
 | `@RepeatedTest` | `@RepeatedTest(10)` | Zufallswerte, Nebenläufigkeit |
 | `@TestMethodOrder` | mit `@Order(1)` | erzwingt Reihenfolge — **Faustregel: nicht verwenden**, Tests sollen unabhängig sein |
-| `@TestInstance(PER_CLASS)` | erlaubt nicht-statisches `@BeforeAll` | teures Setup nur einmal; Preis: geteilter Zustand |
 
 ---
 
