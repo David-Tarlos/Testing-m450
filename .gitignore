@@ -1,6 +1,9 @@
 # Java
 *.class
 
+# Maven
+target/
+
 # IDE
 .idea/
 .vscode/

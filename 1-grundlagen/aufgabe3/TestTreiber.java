@@ -12,7 +12,6 @@ public class TestTreiber {
     static boolean test_calculate_price() {
         boolean test_ok = true;
 
-    
         test_ok &= pruefe("nur Grundpreis",
                 20000,     0,     0,  0,   0,   20000.00);
         test_ok &= pruefe("Grundpreis, 10% Haendlerrabatt",
@@ -31,13 +30,14 @@ public class TestTreiber {
         return test_ok;
     }
 
-    /** Ruft die Methode auf, vergleicht Ist mit Soll und gibt das Ergebnis aus. */
+    /** Ruft die Methode auf, vergleicht Ist mit Soll  */
     static boolean pruefe(String name,
                           double baseprice, double specialprice, double extraprice,
                           int extras, double discount, double erwartet) {
 
         double price = Preisberechnung.calculatePrice(baseprice, specialprice, extraprice, extras, discount);
         // double nie mit == vergleichen -> kleine Toleranz wegen Rundungsfehlern
+
         boolean ok = Math.abs(price - erwartet) < 0.001;
 
         System.out.printf("[%s] %-32s Soll=%9.2f  Ist=%9.2f%n",
