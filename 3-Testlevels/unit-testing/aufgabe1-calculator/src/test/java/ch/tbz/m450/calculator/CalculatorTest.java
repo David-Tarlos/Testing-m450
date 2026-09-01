@@ -46,7 +46,6 @@ class CalculatorTest {
 
     @BeforeEach
     void setUp() {
-        // Vor JEDEM Test eine frische Instanz -> Tests bleiben unabhaengig.
         calculator = new Calculator();
     }
 
@@ -79,7 +78,6 @@ class CalculatorTest {
         @Test
         @DisplayName("addiert negative Zahlen und die Null (Randfaelle)")
         void addiertRandfaelle() {
-            // assertAll fuehrt ALLE Assertions aus und meldet alle Fehler auf einmal.
             assertAll("Randfaelle der Addition",
                     () -> assertEquals(-5.0, calculator.add(-2.0, -3.0), DELTA),
                     () -> assertEquals(1.0, calculator.add(-2.0, 3.0), DELTA),
