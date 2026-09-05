@@ -1,0 +1,18 @@
+{
+  "name": "m450-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automatisierte Tests fuer die Student-App (M450, Modul 5)",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:e2e": "playwright test --project=e2e",
+    "test:headed": "playwright test --project=e2e --headed",
+    "report": "playwright show-report",
+    "load:smoke": "docker run --rm -i -v \"%cd%/load:/scripts\" --network host grafana/k6 run /scripts/students-load.js -e SCENARIO=smoke",
+    "load": "docker run --rm -i -v \"%cd%/load:/scripts\" --network host grafana/k6 run /scripts/students-load.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

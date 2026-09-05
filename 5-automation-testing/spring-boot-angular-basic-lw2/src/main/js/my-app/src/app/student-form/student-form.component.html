@@ -1,0 +1,40 @@
+<div class="card my-5">
+  <div class="card-body">
+
+    <!-- Fehler, die erst das Backend erkennt (z.B. zu langer Name) -->
+    <div *ngIf="serverFehler.length" class="alert alert-danger" id="server-errors">
+      <ul class="mb-0">
+        <li *ngFor="let meldung of serverFehler">{{ meldung }}</li>
+      </ul>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #userForm="ngForm">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <!-- Bewusst ohne maxlength: die Laengenregel gehoert dem Backend. So
+             greift die Server-Fehleranzeige oben auch wirklich. -->
+        <input type="text" [(ngModel)]="student.name" class="form-control" id="name" name="name"
+               placeholder="Enter your name" required #name="ngModel">
+        <!-- Meldung erscheint, wenn das Feld ungueltig ist UND der Nutzer es
+             schon angefasst hat - nicht auf dem frisch geladenen Formular. -->
+        <div *ngIf="name.invalid && (name.dirty || name.touched)"
+             class="alert alert-danger mt-2">
+          <span *ngIf="name.errors?.['required']">Name is required</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" [(ngModel)]="student.email" class="form-control" id="email" name="email"
+               placeholder="Enter your email address" required email #email="ngModel">
+        <div *ngIf="email.invalid && (email.dirty || email.touched)"
+             class="alert alert-danger mt-2">
+          <span *ngIf="email.errors?.['required']">Email is required</span>
+          <span *ngIf="email.errors?.['email']">Email is not a valid address</span>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="!userForm.form.valid" class="btn btn-info">Submit</button>
+    </form>
+  </div>
+</div>
