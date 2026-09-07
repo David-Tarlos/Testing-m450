@@ -2,7 +2,7 @@
 
 > Kapitel 6 des Moduls 450 — Testen von Software (TBZ)
 >
-> **Angewandtes Testkonzept:** [Testkonzept Student-Verwaltung](testkonzept-studentenverwaltung.md)
+> **Lösung zur Übung:** [Testkonzept — Student-Verwaltung](testkonzept.md)
 >
 > *Hinweis: Die Bilder des Original-Kapitels (`x_gitres/*.png`) sind hier nicht
 > eingebunden, damit keine kaputten Bildverweise entstehen. Der Abschnitt
