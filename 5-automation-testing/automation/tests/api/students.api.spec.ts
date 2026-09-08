@@ -3,18 +3,16 @@ import { test, expect, APIRequestContext } from '@playwright/test';
 /**
  * Uebung 1 - automatisierte Tests der REST-Schnittstelle.
  *
- * Playwright wird hier ohne Browser benutzt: die `request`-Fixture ist ein
- * reiner HTTP-Client. Damit deckt ein Tool beide Uebungen ab (API + GUI) und
- * beide landen im selben HTML-Report.
+ * Playwright ohne Browser: die `request`-Fixture ist ein reiner HTTP-Client.
+ * So deckt ein Werkzeug beide Uebungen ab (API + GUI).
  *
- * Die Tests laufen gegen eine laufende Instanz und legen echte Daten an.
- * Deshalb: nie auf eine exakte Anzahl Eintraege pruefen, sondern auf
- * "enthaelt" - sonst faellt der zweite Testlauf um.
+ * Die Tests legen echte Daten an. Deshalb nie auf eine exakte Anzahl pruefen,
+ * sondern auf "enthaelt" - sonst faellt der zweite Lauf um.
  */
 
 type Student = { id: number; name: string; email: string };
 
-/** Eindeutiger Name pro Testlauf, damit sich Laeufe nicht in die Quere kommen. */
+/** Eindeutiger Name pro Lauf, damit sich Laeufe nicht in die Quere kommen. */
 const unique = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -25,24 +23,12 @@ async function getStudents(request: APIRequestContext): Promise<Student[]> {
 }
 
 test.describe('GET /students', () => {
-  test('antwortet mit JSON und haelt den Contract ein', async ({ request }) => {
+  test('antwortet mit 200 und einem JSON-Array', async ({ request }) => {
     const response = await request.get('/students');
 
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('application/json');
-
-    const students: Student[] = await response.json();
-    expect(Array.isArray(students)).toBe(true);
-    expect(students.length).toBeGreaterThan(0);
-
-    for (const student of students) {
-      expect(typeof student.id).toBe('number');
-      expect(typeof student.name).toBe('string');
-      expect(typeof student.email).toBe('string');
-      // keine unerwarteten Felder - das schlaegt an, sobald jemand das Schema
-      // aendert, nicht erst wenn der Server abstuerzt
-      expect(Object.keys(student).sort()).toEqual(['email', 'id', 'name']);
-    }
+    expect(Array.isArray(await response.json())).toBe(true);
   });
 
   test('enthaelt die fuenf Studenten aus dem CommandLineRunner', async ({ request }) => {
@@ -52,10 +38,23 @@ test.describe('GET /students', () => {
       expect.arrayContaining(['Jonas', 'Patrick', 'Yves', 'Peter', 'Ann']),
     );
   });
+
+  test('jeder Eintrag haelt den Contract ein (id, name, email)', async ({ request }) => {
+    const students = await getStudents(request);
+
+    expect(students.length).toBeGreaterThan(0);
+    for (const student of students) {
+      expect(typeof student.id).toBe('number');
+      expect(typeof student.name).toBe('string');
+      expect(typeof student.email).toBe('string');
+      // keine unerwarteten Felder - schlaegt an, sobald jemand das Schema aendert
+      expect(Object.keys(student).sort()).toEqual(['email', 'id', 'name']);
+    }
+  });
 });
 
 test.describe('POST /students', () => {
-  test('legt einen Studenten an und antwortet mit 200 und leerem Body', async ({ request }) => {
+  test('legt einen Studenten an, der danach in der Liste steht', async ({ request }) => {
     const name = unique('Ada');
     const email = `${name}@tbz.ch`;
 
@@ -86,18 +85,22 @@ test.describe('POST /students', () => {
     expect(Object.keys(created!).sort()).toEqual(['email', 'id', 'name']);
   });
 
-  test('lehnt kaputtes JSON und falschen Content-Type ab', async ({ request }) => {
-    const kaputt = await request.post('/students', {
+  test('lehnt kaputtes JSON mit 400 ab', async ({ request }) => {
+    const response = await request.post('/students', {
       headers: { 'Content-Type': 'application/json' },
       data: '{"name":',
     });
-    expect(kaputt.status()).toBe(400);
 
-    const falscherTyp = await request.post('/students', {
+    expect(response.status()).toBe(400);
+  });
+
+  test('lehnt einen falschen Content-Type mit 415 ab', async ({ request }) => {
+    const response = await request.post('/students', {
       headers: { 'Content-Type': 'text/plain' },
       data: 'nur text',
     });
-    expect(falscherTyp.status()).toBe(415);
+
+    expect(response.status()).toBe(415);
   });
 });
 
@@ -122,25 +125,26 @@ test.describe('CORS und Routen', () => {
 });
 
 /**
- * Diese Gruppe hat urspruenglich die Validierungsluecken des Backends
- * festgehalten (leere Namen, ungueltige E-Mails - alles 200 OK). Das
- * Bonus-Feature hat die Luecke geschlossen, deshalb erwarten die Tests jetzt
- * 400 mit feldgenauen Meldungen. Siehe bonus-feature.md.
+ * Urspruenglich nahm der Endpunkt jede Eingabe an (leere Namen, ungueltige
+ * E-Mails, sogar `{}` - alles 200 OK). Das Bonus-Feature hat die Luecke
+ * geschlossen, deshalb erwarten die Tests jetzt 400 mit feldgenauen Meldungen.
  */
 test.describe('Eingabevalidierung (Bonus-Feature)', () => {
   test('lehnt leere Werte mit 400 und Meldungen zu beiden Feldern ab', async ({ request }) => {
-    const leer = await request.post('/students', { data: { name: '', email: '' } });
+    const response = await request.post('/students', { data: { name: '', email: '' } });
 
-    expect(leer.status()).toBe(400);
-    const body = await leer.json();
+    expect(response.status()).toBe(400);
+    const body = await response.json();
     expect(body.error).toBe('Validierungsfehler');
     expect(body.fields.name).toContain('Name darf nicht leer sein');
     expect(body.fields.email).toContain('E-Mail darf nicht leer sein');
+  });
 
-    // ein komplett leeres Objekt verhaelt sich gleich
-    const leeresObjekt = await request.post('/students', { data: {} });
-    expect(leeresObjekt.status()).toBe(400);
-    expect(Object.keys((await leeresObjekt.json()).fields).sort()).toEqual(['email', 'name']);
+  test('lehnt ein komplett leeres Objekt mit 400 ab', async ({ request }) => {
+    const response = await request.post('/students', { data: {} });
+
+    expect(response.status()).toBe(400);
+    expect(Object.keys((await response.json()).fields).sort()).toEqual(['email', 'name']);
   });
 
   test('meldet nur das Feld, das tatsaechlich falsch ist', async ({ request }) => {

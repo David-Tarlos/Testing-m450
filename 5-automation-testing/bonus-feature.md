@@ -147,7 +147,7 @@ Beispielantwort:
 }
 ```
 
-**Testabdeckung:** 20 Tests grün (11 API, 9 E2E), davon 7 für dieses Feature.
+**Testabdeckung:** 26 Tests grün (14 API, 12 E2E), davon 9 für dieses Feature.
 
 ---
 
