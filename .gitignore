@@ -8,3 +8,6 @@ target/
 .idea/
 .vscode/
 *.iml
+
+# Node
+node_modules/
