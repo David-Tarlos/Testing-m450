@@ -1,109 +1,138 @@
 import React, {useState} from 'react';
 import './AddRecipe.css';
-import { useForm } from "react-hook-form";
-import {Form, Button, Col, Row} from 'react-bootstrap';
+import {Alert, Button, Col, Form, Row} from 'react-bootstrap';
+import {useNavigate} from "react-router-dom";
 
-import axios from "axios";
 import AddIngredient from "../AddIngredient/AddIngredient";
+import {createRecipe} from "../../apis/recipeApi";
+
+const EMPTY_RECIPE = {
+    name: '',
+    description: '',
+    imageUrl: '',
+    ingredients: []
+}
+
+// listId only identifies an ingredient row inside this form, the backend does not know it
+const toPayload = (recipe) => ({
+    ...recipe,
+    ingredients: recipe.ingredients.map(({listId, ...ingredient}) => ({
+        ...ingredient,
+        amount: Number(ingredient.amount)
+    }))
+})
 
 function AddRecipe() {
-    const [ ingredients, setIngredients ] = useState([])
-    const [formData, setFormData] = useState({
-        "name": '',
-        "description": '',
-        "imageUrl": '',
-        "ingredients": [],
-        "id": null
-    })
+    const [recipe, setRecipe] = useState(EMPTY_RECIPE)
+    const [nextListId, setNextListId] = useState(1)
+    const [error, setError] = useState(null)
 
-    const [listId, setListId] = useState(1)
+    const navigate = useNavigate()
 
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: {errors},
-    } = useForm()
+    const updateField = ({target}) => {
+        setRecipe({...recipe, [target.name]: target.value})
+    }
 
     const addIngredient = () => {
-
-        setFormData(({...formData, ingredients: [
-                ...formData.ingredients, {
-                    listId: listId,
-                    ingredient: '',
+        setRecipe({
+            ...recipe, ingredients: [
+                ...recipe.ingredients, {
+                    listId: nextListId,
+                    name: '',
                     unit: 'PIECE',
-                    quantity: ''
+                    amount: ''
                 }
-            ]}))
-        setListId(listId + 1)
-
-    }
-    const updateIngredient = (ingredientObj) => {
-        const updatedIngredients = formData.ingredients.map((ingredient) => {
-            if (ingredient.listId === ingredientObj.listId) {
-                return ingredientObj
-            }
-            return ingredient
+            ]
         })
-        setFormData({...formData, ingredients: updatedIngredients})
+        setNextListId(nextListId + 1)
     }
 
-    const removeIngredient = (ingredientObj) => {
-        const updatedIngredients = formData.ingredients.filter((ingredient) => ingredient.listId !== ingredientObj.listId)
-        setFormData({...formData, ingredients: updatedIngredients})
+    const updateIngredient = (changedIngredient) => {
+        const updatedIngredients = recipe.ingredients.map((ingredient) =>
+            ingredient.listId === changedIngredient.listId ? changedIngredient : ingredient)
+        setRecipe({...recipe, ingredients: updatedIngredients})
     }
 
-    const renderIngredients = formData.ingredients.map(ingredient => <AddIngredient
-        key={ingredient.listId}
-        ingredient={ingredient}
-        ingredients={ingredients}
-        listId={listId - 1}
-        updateIngredient={updateIngredient}
-        removeIngredient={removeIngredient}
-    />)
+    const removeIngredient = (removedIngredient) => {
+        const updatedIngredients = recipe.ingredients.filter((ingredient) =>
+            ingredient.listId !== removedIngredient.listId)
+        setRecipe({...recipe, ingredients: updatedIngredients})
+    }
+
+    const submit = (event) => {
+        event.preventDefault()
+        setError(null)
+        createRecipe(toPayload(recipe))
+            .then(() => navigate("/"))
+            .catch(() => setError("The recipe could not be saved. Is the backend running?"))
+    }
 
     return (
-        <>
-            <div className="bg">
-                <div className="m-3">
-                    <h1 className="h3 bg-dark text-bg-primary mt-2">Add Recipe</h1>
+        <div className="bg">
+            <div className="m-3">
+                <h1 className="h3 bg-dark text-bg-primary mt-2">Add Recipe</h1>
+                <Form onSubmit={submit}>
                     <Form.Group className="mb-1" controlId="formBasicName">
                         <Form.Label>Recipe Name:</Form.Label>
-                        <Form.Control placeholder="Name"/>
-                    </Form.Group><Form.Group className="mb-1" controlId="formBasicDescription">
-                        <Form.Label>Description:</Form.Label>
-                        <Form.Control placeholder="Description"/>
-                    </Form.Group><Form.Group className="mb-1 mb-5" controlId="formBasicImageUrl">
-                        <Form.Label>Image URL:</Form.Label>
-                        <Form.Control placeholder="URL"/>
+                        <Form.Control
+                            name="name"
+                            placeholder="Name"
+                            value={recipe.name}
+                            onChange={updateField}
+                            required
+                        />
                     </Form.Group>
+                    <Form.Group className="mb-1" controlId="formBasicDescription">
+                        <Form.Label>Description:</Form.Label>
+                        <Form.Control
+                            name="description"
+                            placeholder="Description"
+                            value={recipe.description}
+                            onChange={updateField}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-1 mb-5" controlId="formBasicImageUrl">
+                        <Form.Label>Image URL:</Form.Label>
+                        <Form.Control
+                            name="imageUrl"
+                            type="url"
+                            placeholder="URL"
+                            value={recipe.imageUrl}
+                            onChange={updateField}
+                        />
+                    </Form.Group>
+
                     <Row>
                         <Col>Ingredient</Col>
                         <Col>Unit</Col>
-                        <Col>Quanity</Col>
-                        <Col xs={1}></Col>
+                        <Col>Quantity</Col>
+                        <Col xs={1}/>
                     </Row>
                     <hr/>
+
+                    {recipe.ingredients.map(ingredient => <AddIngredient
+                        key={ingredient.listId}
+                        ingredient={ingredient}
+                        updateIngredient={updateIngredient}
+                        removeIngredient={removeIngredient}
+                    />)}
+
                     <Row>
-                        <br></br>
-                    </Row>
-                    {renderIngredients}
-                    <Row>
-                        <br></br>
                         <Button
                             variant='warning'
                             onClick={addIngredient}
                             className="mt-1"
-                            >Add Ingredient</Button>
+                        >Add Ingredient</Button>
                     </Row>
-                    <Button variant="primary"  type="submit" className="mb-5">
+
+                    {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+
+                    <Button variant="primary" type="submit" className="mb-5">
                         Submit
                     </Button>
-                </div>
-
+                </Form>
             </div>
-
-        </>
+        </div>
     )
 }
 
