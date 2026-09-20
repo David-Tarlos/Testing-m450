@@ -11,7 +11,7 @@ target/
 
 # Node
 node_modules/
-/build
+build/
 
 # macOS
 .DS_Store
