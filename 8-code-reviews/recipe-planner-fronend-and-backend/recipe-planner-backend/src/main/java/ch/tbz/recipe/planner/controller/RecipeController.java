@@ -1,7 +1,6 @@
 package ch.tbz.recipe.planner.controller;
 
 import ch.tbz.recipe.planner.domain.Recipe;
-import ch.tbz.recipe.planner.mapper.RecipeEntityMapper;
 import ch.tbz.recipe.planner.service.RecipeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,10 +18,7 @@ public class RecipeController {
 
     private final RecipeService service;
 
-    private final RecipeEntityMapper mapper;
-
-    public RecipeController(RecipeService service, RecipeEntityMapper mapper) {
-        this.mapper = mapper;
+    public RecipeController(RecipeService service) {
         this.service = service;
     }
 
@@ -39,6 +35,11 @@ public class RecipeController {
     @PostMapping(value = "/api/recipes")
     public ResponseEntity<Recipe> addRecipe(@RequestBody Recipe recipe) {
         return new ResponseEntity<>(service.addRecipe(recipe), HttpStatus.OK);
+    }
+
+    @PutMapping("/api/recipes/{recipeId}")
+    public ResponseEntity<Recipe> updateRecipe(@PathVariable UUID recipeId, @RequestBody Recipe recipe) {
+        return new ResponseEntity<>(service.updateRecipe(recipeId, recipe), HttpStatus.OK);
     }
 
 }
