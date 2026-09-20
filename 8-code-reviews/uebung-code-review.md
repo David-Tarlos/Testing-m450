@@ -16,6 +16,16 @@ Pipeline-Übung (React-Frontend, Spring-Boot-Backend, H2 im Speicher).
 Das Projekt war noch gar nicht im Repository. Es liegt jetzt **unverändert** als eigener Commit
 auf `main` — sonst würde der erste PR-Diff aus dem kompletten Projekt bestehen statt aus dem Feature.
 
+Zwei weitere Commits liegen direkt auf `main`, weil sie zu keinem der beiden Features gehören:
+
+* `node_modules/`, `build/` und `.DS_Store` im `.gitignore`.
+* Ein Fix an der ESLint-Config. `npm start` und `npm run build` brachen im gelieferten Projekt mit
+  *„Environment key `jest/globals` is unknown"* ab — die App liess sich also gar nicht starten.
+  Ursache ist `eslint-plugin-jest` 25: es lädt `@typescript-eslint/type-utils` und setzt damit
+  TypeScript voraus, das in diesem JS-Projekt nicht installiert ist. Das Plugin stürzt beim Laden ab
+  und übrig bleibt die irreführende Meldung. Ohne `react-app/jest` in der `eslintConfig` laufen
+  Build und Dev-Server wieder, die restlichen `react-app`-Regeln bleiben aktiv.
+
 ---
 
 ## Die drei Branches
@@ -83,6 +93,24 @@ erst, wenn die Daten geladen sind, damit es direkt mit den gespeicherten Werten 
 
 ---
 
+## Ausprobieren
+
+Backend und Frontend laufen getrennt, das Backend muss zuerst da sein:
+
+```bash
+cd 8-code-reviews/recipe-planner-fronend-and-backend/recipe-planner-backend
+mvn spring-boot:run
+
+cd 8-code-reviews/recipe-planner-fronend-and-backend/recipe-planner-fronend
+npm install
+npm start
+```
+
+Beim Start legt das Backend 15 Beispielrezepte in der H2-Datenbank an. Die liegt im Speicher —
+nach einem Neustart sind alle selbst angelegten Rezepte wieder weg.
+
+---
+
 ## PRs erstellen
 
 ```bash
@@ -113,9 +141,18 @@ Das sind die Stellen, an denen man anderer Meinung sein kann:
 
 **Keine Tests geschrieben.** Die Aufgabe verlangt einen Pull Request, keine Tests — aber
 „Existieren Tests?" steht in der Review-Checkliste. Das ist damit ein ehrlicher Findpunkt fürs
-Review und keine Lücke, die versteckt wird. Geprüft ist nur, dass das Backend kompiliert
-(`mvn compile`) und das Frontend baut (`npm run build`) — also dass es übersetzt, nicht dass es
-fachlich stimmt.
+Review und keine Lücke, die versteckt wird.
+
+Geprüft ist nur, dass es übersetzt — nicht, dass es fachlich stimmt:
+
+| Branch | Prüfung | Ergebnis |
+|---|---|---|
+| `feature/add-recipe` | `npm run build` | erfolgreich, 4 ESLint-Warnungen |
+| `feature/edit-recipe-backend` | `mvn clean compile` | BUILD SUCCESS |
+| `feature/edit-recipe-frontend` | `npm run build` | erfolgreich, keine Warnungen |
+
+Die vier Warnungen sind ungenutzte Imports in `App.js` und stammen aus dem gelieferten Projekt.
+Auf dem Edit-Branch sind sie weg, weil `App.js` dort für die neue Route ohnehin angefasst wird.
 
 ---
 
