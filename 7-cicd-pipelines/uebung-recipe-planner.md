@@ -365,13 +365,37 @@ Umgesetzt auf zwei Wegen:
 2. **Artefakte** — `surefire-report` und `jacoco-coverage-report` zum Herunterladen, 30 Tage
    aufbewahrt. Der JaCoCo-Ordner enthält die vollständige HTML-Seite.
 
-### Status
+### Ergebnis des ersten Durchlaufs
 
-> Der Workflow ist geschrieben und die YAML-Syntax ist geprüft (als YAML geparst, Jobs `build` und
-> `test` werden korrekt erkannt). **Ein Durchlauf auf GitHub hat noch nicht stattgefunden**, weil
-> der Commit noch nicht gepusht ist. Sobald gepusht wurde, wird das Ergebnis hier mit der
-> tatsächlichen Laufnummer und dem tatsächlichen Status ergänzt — bis dahin steht hier bewusst
-> keine Erfolgsmeldung.
+Der Push von Commit `9587fdb` hat die Pipeline ausgelöst — genau das, was die Aufgabe verlangt
+(*„schlussendlich soll ein commit (bzw. der Push) jeweils die Pipeline und damit die Ausführung der
+Unit Tests triggern"*).
+
+[**Lauf #1**](https://github.com/David-Tarlos/Testing-m450/actions/runs/35566362981) · 21.09.2026,
+05:55:13–05:56:16 UTC · Dauer **63 Sekunden** · Ergebnis **success**
+
+| Job | Schritt | Ergebnis |
+|---|---|---|
+| `build` | JDK 17 einrichten | success |
+| `build` | Kompilieren | success |
+| `test` | Unit-Tests ausführen | success |
+| `test` | Testergebnis und Coverage in die Zusammenfassung schreiben | success |
+| `test` | Surefire-Report als Artefakt ablegen | success |
+| `test` | JaCoCo-Coverage-Report als Artefakt ablegen | success |
+
+Beide Reports wurden erzeugt und hängen am Durchlauf:
+
+| Artefakt | Grösse |
+|---|---|
+| `surefire-report` | 29 314 Bytes |
+| `jacoco-coverage-report` | 139 586 Bytes |
+
+Damit ist auch die zweite Hälfte der Aufgabe belegt — *„ein Report soll pro Pipeline-Durchlauf
+generiert werden und einsehbar sein"*: als Job-Summary direkt auf der Seite des Durchlaufs und als
+herunterladbares Artefakt.
+
+Der Pfadfilter funktioniert ebenfalls wie gedacht: dieser Nachtrag am Markdown-Dokument liegt
+ausserhalb von `recipe-planner-backend/**` und löst deshalb **keinen** weiteren Lauf aus.
 
 ---
 
