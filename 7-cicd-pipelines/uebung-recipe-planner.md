@@ -329,41 +329,21 @@ im Wurzelverzeichnis des Repositories liegen, genau wie die `.gitlab-ci.yml` im 
 ### Aufbau
 
 ```
-push / pull_request / manuell
-        │
-        ▼
-   ┌─────────┐        ┌────────────────────────────────────┐
-   │  build  │ ─────► │              test                  │
-   │ compile │ needs  │  mvn test                          │
-   └─────────┘        │  → Zusammenfassung ins Job-Summary │
-                      │  → Surefire-Report als Artefakt    │
-                      │  → JaCoCo-Report als Artefakt      │
-                      └────────────────────────────────────┘
+push / pull_request / manuell  →  build (compile)  →[needs]→  test (mvn test + Reports)
 ```
 
 Drei Entscheidungen, die im Workflow stecken:
 
-**Pfadfilter.** Der Workflow startet nur, wenn sich am Backend oder an der Workflow-Datei selbst
-etwas ändert. Ohne das würde jeder Markdown-Commit im Repo einen Maven-Build auslösen — bei einem
-Schul-Repo mit neun Kapiteln wäre das reine Verschwendung.
+| Entscheidung | Warum |
+|---|---|
+| **Pfadfilter** auf `recipe-planner-backend/**` | Sonst würde jeder Markdown-Commit im Repo einen Maven-Build auslösen |
+| **`cache: maven`** in `setup-java` | Behält `~/.m2` zwischen den Läufen — nur der erste Durchlauf lädt Spring Boot herunter |
+| **`if: always()`** bei den Reports | Ein Report ist am wertvollsten, wenn die Tests **rot** sind. Ohne die Bedingung würde der Upload dann übersprungen |
 
-**Maven-Cache.** `cache: maven` in `setup-java` behält `~/.m2` zwischen den Läufen. Der erste
-Durchlauf lädt Spring Boot komplett herunter, die folgenden nicht mehr.
-
-**`if: always()` bei den Reports.** Ein Report ist genau dann am wertvollsten, wenn die Tests
-fehlgeschlagen sind. Ohne diese Bedingung würde der Upload-Schritt nach einem roten Test
-übersprungen — und man hätte keine Ausgabe, um den Fehler zu verstehen.
-
-### Report pro Durchlauf
-
-Die Aufgabe verlangt: *„Ein Report soll pro Pipeline-Durchlauf generiert werden und einsehbar sein."*
-Umgesetzt auf zwei Wegen:
-
-1. **Job-Summary** — direkt auf der Seite des Durchlaufs, ohne Download: eine Tabelle mit
-   Tests / Failures / Errors / Skipped sowie die Instruction Coverage in Prozent. Erzeugt aus den
-   Surefire-XML-Dateien und aus `jacoco.csv`, ohne fremde Actions.
-2. **Artefakte** — `surefire-report` und `jacoco-coverage-report` zum Herunterladen, 30 Tage
-   aufbewahrt. Der JaCoCo-Ordner enthält die vollständige HTML-Seite.
+Der geforderte Report pro Durchlauf entsteht auf zwei Wegen: als **Job-Summary** direkt auf der
+Seite des Durchlaufs (Tabelle mit Tests/Failures/Errors plus Coverage, erzeugt aus den
+Surefire-XML-Dateien und `jacoco.csv`, ohne fremde Actions) und als **Artefakte** zum
+Herunterladen, 30 Tage aufbewahrt.
 
 ### Ergebnis des ersten Durchlaufs
 

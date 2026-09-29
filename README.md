@@ -183,7 +183,7 @@ nach **IEEE 829**.
 ## Kapitel 7 — CI/CD-Pipeline und Deployment Environments
 
 📁 [`7-cicd-pipelines/`](7-cicd-pipelines/) ·
-📄 **[Zum Vorzeigen: VORZEIGEN.md](7-cicd-pipelines/VORZEIGEN.md)**
+📄 [Abgabe-Übersicht und Theorie](7-cicd-pipelines/README.md)
 
 Zwei Kapitel in einem Ordner:
 

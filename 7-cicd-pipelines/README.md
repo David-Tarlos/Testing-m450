@@ -1,13 +1,52 @@
 # Automatisiertes Testen und Deployen
 
-> Kapitel 7 des Moduls 450 — Testen von Software (TBZ)
->
-> **Zum Vorzeigen:** [VORZEIGEN.md](VORZEIGEN.md) — alles in einer Datei, von oben nach unten
->
-> **Lösung zur Übung:** [Aufgabe 1–3 — recipe-planner](uebung-recipe-planner.md)
->
-> **Zweites Kapitel in diesem Ordner:** [Deployment Environment](deployment-environment/README.md)
->
+> Kapitel 7 des Moduls 450 — Testen von Software (TBZ). In diesem Ordner liegen **zwei**
+> Kapitel: CI/CD (hier) und [Deployment Environments](deployment-environment/README.md).
+
+## Abgabe — was vorgezeigt wird
+
+**Vorher starten** (der erste Build dauert Minuten):
+
+```
+docker compose -f deployment-environment/docker-compose.yml build
+```
+
+Dann von oben nach unten:
+
+| # | Aufgabe | Beweis | Wo |
+|---|---|---|---|
+| 1 | Controller-Tests via MockMvc, Mapper-Tests mit SoftAssertions | **42 Tests grün** | in IntelliJ: `src/test/java` → *Run All Tests* |
+| 2 | Automatisierte Reports | **95,1 %** Coverage | `target/site/jacoco/index.html` im Browser öffnen |
+| 3 | Pipeline, durch Push getriggert | **Lauf #1 grün, 63 s** | [Actions auf GitHub](https://github.com/David-Tarlos/Testing-m450/actions/runs/35566362981) |
+| 4 | Werkzeugvergleich der vier Lösungen | Tabelle | [uebung-environments.md](deployment-environment/uebung-environments.md#1--aufgabe-1--welche-lösung-für-welche-umgebung) |
+| 5 | Testing Environment aufsetzen | **beide Container HTTP 200** | `docker compose up -d`, dann `localhost:3000` und `localhost:8080/api/recipes` |
+
+Die drei Punkte, an denen etwas zu erzählen ist — Details jeweils im verlinkten Abschnitt:
+
+* **Coverage sprang von 38 % auf 95,1 %**, ohne dass sich Tests oder Code änderten. Lombok war
+  schuld. → [Aufgabe 2](uebung-recipe-planner.md#2--aufgabe-2--reports)
+* **SoftAssertions melden alle Fehler auf einmal** — mit echter Ausgabe belegt, nicht behauptet.
+  → [Aufgabe 1.2](uebung-recipe-planner.md#12--mapper-tests-mit-softassertions)
+* **Port 8080 musste veröffentlicht werden**, obwohl beide Container im selben Netzwerk liegen.
+  → [Deployment Aufgabe 2](deployment-environment/uebung-environments.md#22--das-setup)
+
+Zum Schluss: `docker compose -f deployment-environment/docker-compose.yml down`
+
+## Dateien in diesem Ordner
+
+| Datei | Inhalt |
+|---|---|
+| `README.md` (diese Datei) | Theorie CI/CD aus den TBZ-Unterlagen |
+| [`uebung-recipe-planner.md`](uebung-recipe-planner.md) | **Lösung** Aufgabe 1–3 mit allen Ergebnissen |
+| [`deployment-environment/README.md`](deployment-environment/README.md) | Theorie Deployment Environments |
+| [`deployment-environment/uebung-environments.md`](deployment-environment/uebung-environments.md) | **Lösung** Aufgabe 1–2 mit Reflexion |
+| `recipe-planner/` | Das Projekt mit den Tests |
+| [`../.github/workflows/recipe-planner.yml`](../.github/workflows/recipe-planner.yml) | Die Pipeline |
+
+Regel: **`README.md` = Theorie vom Lehrer, `uebung-*.md` = meine Lösung.**
+
+---
+
 > *Hinweis: Die Bilder des Original-Kapitels (`x_gitres/*.png`) sind hier nicht
 > eingebunden, damit keine kaputten Bildverweise entstehen.*
 
