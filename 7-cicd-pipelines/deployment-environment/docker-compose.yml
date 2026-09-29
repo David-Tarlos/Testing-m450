@@ -1,0 +1,63 @@
+# Aufgabe 2 — ein Testing Environment fuer den recipe-planner, aufgesetzt mit
+# Docker Compose.
+#
+# Warum Testing und nicht Development: die Entwicklungsumgebung ist laut Theorie
+# die Workstation des Entwicklers - dort laufen Backend und Frontend ohnehin
+# direkt. Interessant wird es eine Stufe weiter: eine Umgebung, die auf jedem
+# Rechner identisch hochkommt, ohne dass jemand vorher ein JDK 17, Maven und
+# Node 18 von Hand installiert.
+#
+# Start:   docker compose up --build
+# Stopp:   docker compose down
+#
+# Danach:  Frontend  http://localhost:3000
+#          Backend   http://localhost:8080/api/recipes
+#          H2-Konsole http://localhost:8080/h2-console
+
+services:
+
+  backend:
+    build:
+      context: ../recipe-planner/recipe-planner-backend
+    container_name: recipe-planner-backend
+    ports:
+      # Muss auf den Host veroeffentlicht werden: das Frontend ruft die API im
+      # Browser des Benutzers auf, und dort steht "http://localhost:8080"
+      # fest im Code (Browse.js). Der Aufruf kommt also vom Host, nicht aus
+      # dem Frontend-Container - ein Compose-interner Name wuerde nicht helfen.
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      # Das Frontend soll erst starten, wenn die API wirklich antwortet.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/recipes || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - recipe-planner
+
+  frontend:
+    build:
+      context: ../recipe-planner/recipe-planner-fronend
+    container_name: recipe-planner-frontend
+    ports:
+      # Port 3000 ist nicht beliebig: der Controller erlaubt per
+      # @CrossOrigin(origins = "http://localhost:3000") genau diese Origin.
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    stdin_open: true
+    networks:
+      - recipe-planner
+
+networks:
+  recipe-planner:
+    driver: bridge
+
+# Kein Volume und kein Datenbank-Service: die Anwendung benutzt H2 in-memory
+# im Backend-Prozess. Nach "docker compose down" ist der Stand weg und der
+# CommandLineRunner legt beim naechsten Start wieder 15 Rezepte an. Fuer ein
+# Testing Environment ist genau das erwuenscht - jeder Lauf startet gleich.

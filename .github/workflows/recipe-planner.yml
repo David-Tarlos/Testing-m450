@@ -1,0 +1,133 @@
+# Aufgabe 3 — Build-Pipeline fuer das recipe-planner-backend
+#
+# Umsetzung mit GitHub Actions statt GitLab CI, weil das Repository auf GitHub liegt.
+# Die Theorie laesst das ausdruecklich zu ("Sie koennen alternativ auch mit GitHub
+# arbeiten"). Die Begriffe des Kapitels bilden sich so ab:
+#
+#   GitLab CI            GitHub Actions
+#   ------------------   --------------------------------------------
+#   pipeline             workflow (diese Datei)
+#   stages               jobs mit "needs" (Reihenfolge)
+#   job                  job
+#   image: maven:latest  runs-on + actions/setup-java
+#   variables            env
+#   script               steps[].run
+#   artifacts            actions/upload-artifact
+#   pages (Reports)      Artefakte + Job-Summary
+#   runner (shared)      GitHub-hosted runner (ubuntu-latest)
+
+name: recipe-planner backend
+
+on:
+  push:
+    paths:
+      - '7-cicd-pipelines/recipe-planner/recipe-planner-backend/**'
+      - '.github/workflows/recipe-planner.yml'
+  pull_request:
+    paths:
+      - '7-cicd-pipelines/recipe-planner/recipe-planner-backend/**'
+      - '.github/workflows/recipe-planner.yml'
+  workflow_dispatch:        # erlaubt das manuelle Ausloesen ueber die Actions-Oberflaeche
+
+# Entspricht "variables:" in der GitLab-Syntax.
+env:
+  BACKEND_DIR: 7-cicd-pipelines/recipe-planner/recipe-planner-backend
+  MAVEN_CLI_OPTS: --batch-mode --no-transfer-progress
+  JAVA_VERSION: '17'        # die pom.xml kompiliert gegen Release 17
+
+jobs:
+
+  # ----------------------------------------------------------------- Stage 1
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK ${{ env.JAVA_VERSION }} einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven          # ~/.m2 wird zwischen Laeufen wiederverwendet
+
+      - name: Kompilieren
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: mvn $MAVEN_CLI_OPTS clean compile
+
+  # ----------------------------------------------------------------- Stage 2
+  # Laeuft erst, wenn "build" erfolgreich war - das ist das Gegenstueck zur
+  # Reihenfolge der "stages:"-Liste in GitLab.
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK ${{ env.JAVA_VERSION }} einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Unit-Tests ausfuehren
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: mvn $MAVEN_CLI_OPTS clean test
+
+      # Ab hier: immer ausfuehren, auch wenn Tests fehlgeschlagen sind - gerade
+      # dann will man den Report sehen.
+      - name: Testergebnis und Coverage in die Zusammenfassung schreiben
+        if: always()
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          echo "## Testergebnis" >> "$GITHUB_STEP_SUMMARY"
+          if ls target/surefire-reports/*.xml >/dev/null 2>&1; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = s = 0
+          for p in glob.glob("target/surefire-reports/*.xml"):
+              r = ET.parse(p).getroot()
+              t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
+              e += int(r.get("errors", 0)); s += int(r.get("skipped", 0))
+          status = "bestanden" if f == 0 and e == 0 else "fehlgeschlagen"
+          print(f"| Tests | Failures | Errors | Skipped | Status |")
+          print(f"|---|---|---|---|---|")
+          print(f"| {t} | {f} | {e} | {s} | **{status}** |")
+          PY
+          else
+            echo "_Keine Surefire-Reports gefunden._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Code Coverage (JaCoCo)" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f target/site/jacoco/jacoco.csv ]; then
+            awk -F, 'NR>1 {miss+=$4; cov+=$5}
+                     END {if (miss+cov > 0)
+                            printf "Instruction Coverage: **%.1f %%** (%d von %d)\n", 100*cov/(miss+cov), cov, miss+cov
+                          else print "Keine Daten."}' \
+                target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_Kein JaCoCo-Report gefunden._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Entspricht "artifacts:" in GitLab. Die Dateien sind danach auf der
+      # Seite des Pipeline-Durchlaufs herunterladbar.
+      - name: Surefire-Report als Artefakt ablegen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-report
+          path: ${{ env.BACKEND_DIR }}/target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: JaCoCo-Coverage-Report als Artefakt ablegen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: ${{ env.BACKEND_DIR }}/target/site/jacoco/
+          if-no-files-found: warn
+          retention-days: 30
