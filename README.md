@@ -19,7 +19,7 @@ Aufgaben und die **tatsächlich gemessenen** Ergebnisse.
 | [5](5-automation-testing/) | Automation Testing | ✅ | 26 Tests, Lasttest, Bonus-Feature |
 | [6](6-testkonzept-vertieft/) | Testkonzept | ✅ | Testkonzept nach IEEE 829 |
 | [7](7-cicd-pipelines/) | CI/CD + Deployment Environments | ✅ | 42 Tests, 95,1 % Coverage, Pipeline grün |
-| [8](8-code-reviews/) | Code Reviews | ⬜ | offen |
+| [8](8-code-reviews/) | Code Reviews | ✅ | 2 × 3 PRs verglichen, Entscheidungen dokumentiert, 1 Bug gefunden |
 | [9](9-test-driven-development/) | Test Driven Development | ⬜ | offen |
 | Modulprojekt | eigenes Projekt | ⬜ | offen |
 
@@ -242,10 +242,23 @@ dieser Aufruf passiert im Browser, nicht im Container.
 
 ---
 
-## Kapitel 8 und 9 — offen
+## Kapitel 8 — Code Reviews
 
-`8-code-reviews/` und `9-test-driven-development/` sind noch leer. Beide gehören zu den Bausteinen
-des Modulprojekts.
+📁 [`8-code-reviews/`](8-code-reviews/) · 📄 [Lösung](8-code-reviews/uebung-code-review.md)
+
+Recipe Planner aus Kapitel 7: „Rezept anlegen" (Frontend) und „Rezept ändern" (Frontend + Backend),
+von David und Leon je unabhängig umgesetzt — 6 PRs, verglichen und entschieden.
+
+**Ergebnis:** Die Backend-Logik ist bei beiden identisch. Am besten ist die Kombination aus Leons
+Backend (mit Tests) und Davids Frontend-Struktur (`RecipeForm`, `recipeApi.js`) mit Leons
+Fehlerbehandlung. Im Review gefunden: Ein Edit-Link mit unbekannter Id zeigt bei David eine leere
+Seite.
+
+---
+
+## Kapitel 9 — offen
+
+`9-test-driven-development/` ist noch leer und gehört zu den Bausteinen des Modulprojekts.
 
 ---
 

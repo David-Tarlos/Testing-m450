@@ -111,18 +111,19 @@ nach einem Neustart sind alle selbst angelegten Rezepte wieder weg.
 
 ---
 
-## PRs erstellen
+## Die Pull Requests
 
-```bash
-git push -u origin feature/add-recipe
-git push -u origin feature/edit-recipe-backend
-git push -u origin feature/edit-recipe-frontend
-```
+Beide haben je drei PRs erstellt, alle mit Ziel `main`. Leons Branches haben das Suffix `-leon`,
+seine eigene Doku liegt auf seinem Branch als `uebung-code-review-leon.md`.
 
-GitHub gibt bei jedem Push einen Link zurück, mit dem sich der PR direkt öffnen lässt. Wichtig beim
-dritten: als Ziel-Branch `feature/add-recipe` wählen, nicht `main`. Die Commit-Messages taugen als
-PR-Beschreibung — und die Punkte aus dem nächsten Abschnitt gehören mit hinein, damit der Reviewer
-weiss, wo er hinschauen soll.
+| Feature | David | Leon |
+|---|---|---|
+| Rezept anlegen (Frontend) | #1 `feature/add-recipe` | #4 `feature/add-recipe-leon` |
+| Rezept ändern (Backend) | #2 `feature/edit-recipe-backend` | #5 `feature/edit-recipe-backend-leon` |
+| Rezept ändern (Frontend) | #3 `feature/edit-recipe-frontend` | #6 `feature/edit-recipe-frontend-leon` |
+
+#3 und #6 bauen auf dem jeweiligen Add-Branch auf, zeigen auf `main` und enthalten darum die
+Änderungen von #1 bzw. #4 noch einmal. Am Code ändert das nichts, das Review wird aber mühsamer.
 
 ---
 
@@ -193,13 +194,97 @@ Follow-up notieren statt im PR einfordern.
 
 ## Erkenntnisse aus dem Review
 
-> *Wird nach dem gegenseitigen Review zusammen ausgefüllt — beide Implementationen nebeneinander
-> legen und vergleichen.*
+Beide Lösungen nebeneinander gelegt, Leons Stand selber nachgeprüft:
 
-| Thema | Meine Lösung | Lösung des Partners | Was wir behalten |
+| PR (Leon) | Prüfung | Ergebnis |
+|---|---|---|
+| #4 `feature/add-recipe-leon` | `npm run build` | erfolgreich, 6 ESLint-Warnungen (ungenutzte Imports in `App.js` und `Browse.js`) |
+| #5 `feature/edit-recipe-backend-leon` | `mvn test` | 2 Tests, 2 grün |
+| #6 `feature/edit-recipe-frontend-leon` | `npm run build` | erfolgreich, keine Warnungen |
+
+Vieles ist bei beiden fast Zeile für Zeile gleich — das Feature lässt nicht viele Wege offen. Die
+Entscheidungen unten gehen trotzdem jeden Teil durch, auch die gleichen.
+
+### Aufgabe 1 — Rezept anlegen (Frontend, #1 gegen #4)
+
+**Bei beiden gleich:** `react-hook-form` raus, Felder über `useState` gebunden, Zutatenfelder
+heissen wie im Backend (`name`, `unit`, `amount`), Einheiten als Konstante `UNITS`, `listId` wird
+vor dem Senden entfernt und `amount` in eine Zahl umgewandelt, nach dem Speichern zurück auf `/`,
+bei Fehler ein rotes `Alert`, Tippfehler „Quanity" korrigiert.
+
+| Thema | David | Leon | Wir nehmen | Warum |
+|---|---|---|---|---|
+| Backend-Zugriff | `recipeApi.js` mit `fetchRecipes()` / `createRecipe()` | `api.js` nur mit der URL, `axios` bleibt in den Komponenten | **David** | Die Komponente sagt nur *was* sie will, nicht *wie*. Ändert sich ein Endpoint, ist es eine Stelle. |
+| Doppelklick auf Submit | nicht verhindert | Button gesperrt, solange gespeichert wird (`saving`) | **Leon** | Bei langsamem Backend entstehen sonst doppelte Rezepte. Drei Zeilen Code. |
+| Menge | `min="0"` | `min="1"`, `step="1"` | **Leon** | 0 Gramm Mehl ist keine Zutat. Das Backend nimmt nur ganze Zahlen. |
+| Barrierefreiheit | Zutatenfelder ohne Beschriftung | `aria-label` an jedem Zutatenfeld | **Leon** | Die Felder haben nur einen Platzhalter, ein Screenreader sagt sonst nichts. |
+| Feld-Handler | `name`-Attribut + `target.name` | `handleChange('name')` | egal | Beides kurz und lesbar. Geschmack. |
+| Fehlermeldung | unter dem Formular, beim Button | oben unter dem Titel | **David** | Man sieht sie dort, wo man gerade geklickt hat. Knapp, eher Geschmack. |
+| Aufräumen in `Browse.js` | `post` → `recipes`, `key` ergänzt, `null`-Prüfung durch leere Liste ersetzt | nur die URL ersetzt, ungenutzte Imports bleiben | **David** | Datei wird sowieso angefasst — Boy-Scout-Rule. |
+| Tote Reste | leere `propTypes`/`defaultProps` entfernt | stehen gelassen | **David** | Leere Platzhalter sagen nichts aus. |
+
+### Aufgabe 2 — Rezept ändern, Backend (#2 gegen #5)
+
+**Bei beiden gleich:** `PUT /api/recipes/{recipeId}`, `@Transactional`, Rezept laden, Name,
+Beschreibung und Bild überschreiben, Zutaten-Ids auf `null` setzen, die bestehende Liste leeren
+und neu füllen (wegen `orphanRemoval`), unbekannte Id → 404, ungültige Einheit → 400.
+
+| Thema | David | Leon | Wir nehmen | Warum |
+|---|---|---|---|---|
+| 404 bei unbekannter Id | `RecipeNotFoundException` mit `@ResponseStatus` | Service gibt `Optional` zurück, Controller macht 404 | **Leon** | Der Service bleibt frei von HTTP. Bei David hängt eine Spring-Web-Annotation im Service-Paket. |
+| Zutaten umwandeln | eigener `IngredientEntityMapper` im Service | ganzes Rezept mit `RecipeEntityMapper` umwandeln, Zutaten daraus nehmen | **Leon** | Eine Abhängigkeit weniger, gleiches Ergebnis (KISS). |
+| Tests | keine | 2 MockMvc-Tests: Ersetzen inkl. Zutaten, 404 | **Leon** | Ohne Test ist das Verhalten nur behauptet. Das ist der grösste Unterschied. |
+| Dokumentation im Code | ein Kommentar zum Ersetzen der Zutaten | Javadoc zum Verhalten + Kommentar | **Leon** | Wer den Service aufruft, sieht sofort, was mit Ids passiert. |
+| Aufräumen | ungenutzter Mapper aus dem Controller, Felder `private final` | nichts | **David** | Kleiner, sicherer Gewinn in Dateien, die eh angefasst werden. |
+| PR-Beschreibung | kurz, verweist auf sich selber („siehe PR-Beschreibung") | ausführlich: Verhalten, Randfälle, wie getestet | **Leon** | Der Reviewer weiss, was er prüfen muss. |
+
+### Aufgabe 2 — Rezept ändern, Frontend (#3 gegen #6)
+
+**Bei beiden gleich:** Route `/recipes/:recipeId/edit`, „Edit Details" als `Link`, Rezept per
+`GET` laden, per `PUT` speichern, danach zurück auf `/`, ungenutzte Imports aus `App.js` entfernt.
+
+| Thema | David | Leon | Wir nehmen | Warum |
+|---|---|---|---|---|
+| Aufbau | neue `RecipeForm`, `AddRecipe`/`EditRecipe` als dünne Hüllen | `AddRecipe` mit zwei Modi über `recipeId` | **David** | Jede Komponente hat eine Aufgabe (SRP), die Namen stimmen. Bei Leon steht `recipeId ? … : …` an vier Stellen. |
+| Grösse des Diffs | ~190 Zeilen | ~40 Zeilen | Leon wäre schneller reviewt | Ehrlicher Zielkonflikt. Wir nehmen trotzdem die Aufteilung, weil sie bei jedem weiteren Feature hilft. |
+| Unbekannte Id | **leere Seite** (Bug) | Meldung „Recipe not found", Submit gesperrt | **Leon** | Muss rein. Das Backend antwortet hier mit 200 und leerem Body, das hat nur Leon abgefangen. |
+| Laden | Formular erst rendern, wenn das Rezept da ist | Formular sofort, Submit gesperrt bis geladen | **David** | Kein kurzes Aufblitzen eines leeren Formulars. Schützen tun beide gleich gut. |
+| Wechsel Edit → Add | eigene Komponenten, kein Problem | State bleibt stehen (Leon nennt das selber) | **David** | Fällt durch die Aufteilung gar nicht erst an. |
+| Button-Text | „Save" beim Ändern | „Submit" bei beidem | **David** | Sagt, was passiert. |
+
+### Prozess
+
+| Thema | David | Leon | Wir nehmen |
 |---|---|---|---|
-| | | | |
+| PR-Text | #1 und #2 mit Beschreibung, #3 leer | #5 sehr gut, #4 und #6 leer | Jeder PR braucht ein paar Sätze — was, warum, wie getestet. |
+| Ziel-Branch der gestapelten PRs | `main` | `main` | Ziel auf den Add-Branch stellen, sonst steht #1/#4 doppelt im Diff. |
+| Commits direkt auf `main` | — | `test`, `test delete` ohne PR | Alles über PRs, auch Kleinigkeiten. |
+| Eigene Doku | im Repo auf `main` | als eigene Datei auf dem Feature-Branch | Bleibt so — so sieht man beide Sichten. |
 
-**Diskussionspunkte:**
+### Fazit — was wir wählen
 
-**Was ich beim Reviewen gelernt habe:**
+Keine der beiden Lösungen ist allein die beste. Wir nehmen:
+
+* **Backend: Leons #5** — gleiche Logik wie #2, aber getestet, ohne HTTP im Service und besser
+  beschrieben. #2 wird geschlossen. Mein Aufräumen im Controller (ungenutzter Mapper) kommt als
+  Nachtrag mit.
+* **Frontend: Davids #1 und #3** als Grundlage, wegen `recipeApi.js` und `RecipeForm`. Bevor
+  gemerged wird, kommen Leons Punkte dazu: Meldung bei unbekannter Id (Bug), Submit-Sperre beim
+  Speichern, `min="1"`, `aria-label`. #4 und #6 werden geschlossen.
+
+Kurz gesagt: **Leon ist an den Rändern sorgfältiger, David hat sauberer aufgeteilt.**
+
+### Was wir gelernt haben
+
+* **Durchklicken findet mehr als Lesen.** Der Bug mit der leeren Seite ist im Code kaum zu sehen —
+  er hängt an einem Verhalten des Backends, das gar nicht im Diff steht.
+* **Tests machen Fehlerfälle sichtbar.** Den 404-Fall haben beide gebaut, aber nur bei Leon ist er
+  durch einen Test belegt — bei mir ist er bloss behauptet.
+* **Gleiche Aufgabe, gleicher Kern.** Die eigentliche Logik ist bei beiden fast identisch. Die
+  Unterschiede liegen in Fehlerfällen und Struktur — genau dort lohnt sich ein Review.
+* **Kleiner Diff gegen saubere Struktur** ist ein echter Zielkonflikt. Beides ist begründbar, man
+  muss es nur im PR sagen.
+* **Ein PR ohne Text ist schwer zu reviewen.** Bei #5 wusste man sofort, was zu prüfen ist, bei den
+  leeren musste man es aus dem Code erraten.
+* **Ton:** Kommentare als „Bug / Vorschlag / nit" markieren — dann ist klar, was den Merge blockiert
+  und was Geschmack ist.
