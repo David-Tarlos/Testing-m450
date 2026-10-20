@@ -1,7 +1,7 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './AddRecipe.css';
 import {Form, Button, Col, Row, Alert} from 'react-bootstrap';
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 
 import axios from "axios";
 import AddIngredient from "../AddIngredient/AddIngredient";
@@ -16,8 +16,10 @@ const toRequestBody = (formData) => ({
     }))
 })
 
+// Ohne recipeId in der URL wird ein neues Rezept angelegt, mit recipeId ein bestehendes bearbeitet
 function AddRecipe() {
     const navigate = useNavigate()
+    const {recipeId} = useParams()
     const [formData, setFormData] = useState({
         "name": '',
         "description": '',
@@ -25,8 +27,32 @@ function AddRecipe() {
         "ingredients": []
     })
     const [listId, setListId] = useState(1)
+    const [loaded, setLoaded] = useState(!recipeId)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
+
+    useEffect(() => {
+        if (!recipeId) return
+        axios.get(`${RECIPES_URL}/recipe/${recipeId}`)
+            .then((response) => {
+                // Das Backend antwortet bei unbekannter Id mit 200 und leerem Body
+                if (!response.data) {
+                    setError('Recipe not found.')
+                    return
+                }
+                const recipe = response.data
+                const ingredients = (recipe.ingredients ?? []).map((ingredient, index) => ({...ingredient, listId: index + 1}))
+                setFormData({
+                    name: recipe.name ?? '',
+                    description: recipe.description ?? '',
+                    imageUrl: recipe.imageUrl ?? '',
+                    ingredients
+                })
+                setListId(ingredients.length + 1)
+                setLoaded(true)
+            })
+            .catch(() => setError('The recipe could not be loaded.'))
+    }, [recipeId])
 
     const handleChange = (field) => (e) => setFormData({...formData, [field]: e.target.value})
 
@@ -62,7 +88,10 @@ function AddRecipe() {
         event.preventDefault()
         setSaving(true)
         setError(null)
-        axios.post(RECIPES_URL, toRequestBody(formData))
+        const request = recipeId
+            ? axios.put(`${RECIPES_URL}/${recipeId}`, toRequestBody(formData))
+            : axios.post(RECIPES_URL, toRequestBody(formData))
+        request
             .then(() => navigate('/'))
             .catch(() => {
                 setError('The recipe could not be saved. Is the backend running?')
@@ -81,7 +110,7 @@ function AddRecipe() {
         <>
             <div className="bg">
                 <Form className="m-3" onSubmit={handleSubmit}>
-                    <h1 className="h3 bg-dark text-bg-primary mt-2">Add Recipe</h1>
+                    <h1 className="h3 bg-dark text-bg-primary mt-2">{recipeId ? 'Edit Recipe' : 'Add Recipe'}</h1>
                     {error && <Alert variant="danger">{error}</Alert>}
                     <Form.Group className="mb-1" controlId="formBasicName">
                         <Form.Label>Recipe Name:</Form.Label>
@@ -112,7 +141,7 @@ function AddRecipe() {
                             className="mt-1"
                             >Add Ingredient</Button>
                     </Row>
-                    <Button variant="primary" type="submit" className="mb-5" disabled={saving}>
+                    <Button variant="primary" type="submit" className="mb-5" disabled={saving || !loaded}>
                         Submit
                     </Button>
                 </Form>
