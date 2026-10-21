@@ -3,8 +3,7 @@ import './Browse.css';
 import axios from "axios";
 import Recipe from "../Recipe/Recipe";
 import {Col, Row} from "react-bootstrap";
-
-const baseURL = "http://localhost:8080/api/recipes";
+import {RECIPES_URL} from "../../api";
 
 
 const Browse = () => {
@@ -12,7 +11,7 @@ const Browse = () => {
         const [post, setPost] = React.useState(null);
 
         React.useEffect(() => {
-            axios.get(baseURL).then((response) => {
+            axios.get(RECIPES_URL).then((response) => {
                 setPost(response.data);
             });
         }, []);
