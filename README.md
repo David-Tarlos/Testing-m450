@@ -20,10 +20,10 @@ Aufgaben und die **tatsächlich gemessenen** Ergebnisse.
 | [6](6-testkonzept-vertieft/) | Testkonzept | ✅ | Testkonzept nach IEEE 829 |
 | [7](7-cicd-pipelines/) | CI/CD + Deployment Environments | ✅ | 42 Tests, 95,1 % Coverage, Pipeline grün |
 | [8](8-code-reviews/) | Code Reviews | ✅ | 2 × 3 PRs verglichen, Entscheidungen dokumentiert, 1 Bug gefunden |
-| [9](9-test-driven-development/) | Test Driven Development | ⬜ | offen |
+| [9](9-test-driven-development/) | Test Driven Development | ✅ | 3 Tests / 27 Asserts grün, 7 Spielräume dokumentiert |
 | Modulprojekt | eigenes Projekt | ⬜ | offen |
 
-**Tests im Repository gesamt: 238**, alle grün.
+**Tests im Repository gesamt: 241**, alle grün.
 
 ---
 
@@ -256,9 +256,29 @@ Seite.
 
 ---
 
-## Kapitel 9 — offen
+## Kapitel 9 — Test Driven Development
 
-`9-test-driven-development/` ist noch leer und gehört zu den Bausteinen des Modulprojekts.
+📁 [`9-test-driven-development/`](9-test-driven-development/) ·
+📄 [Theorie](9-test-driven-development/README.md) ·
+📄 [Lösung](9-test-driven-development/uebung-tdd.md)
+
+**Testobjekt:** `FancyApp` (Vorgabe): PHPUnit-Tests, zu denen die Methoden von `MyFancyClass`
+fehlen. Die Tests sind die Spezifikation.
+
+| Aufgabe | Inhalt | Ergebnis |
+|---|---|---|
+| 1 | PHP 8.3 + PHPUnit 10.5 aufsetzen, Tests rot laufen lassen | **3 Failures**. Die Vorgabe lief erst nach Umstellen der Basisklasse (`PHPUnit_Framework_TestCase` → `TestCase`) |
+| 2 | `shortString`, `calcAverage`, `getOpposite` im Red-Green-Refactor-Zyklus | **OK (3 tests, 27 assertions)** nach 8 Iterationen |
+| 3 | Vergleich mit anderen Gruppen | **offen**. Vorbereitet: 7 Stellen, an denen die Tests mehrere Lösungen zulassen |
+
+**Was die Tests gefunden haben:** `strlen` zählt Bytes, nicht Zeichen. «Länge» sind 6 Bytes
+bei 5 Zeichen, deshalb blieb Zeile 49 rot, bis `mb_strlen` verwendet wurde. Und
+`calcAverage(['3.44', 'bestanden', 'nicht bewertbar'])` liefert ohne Prüfung still **1.1467**
+statt eines Fehlers.
+
+**Was die Tests nicht finden:** `assertEquals(0, null)` ist grün. Mit leeren Methodenrümpfen
+waren schon 2 Asserts erfüllt.
+*Grüne Tests sind nur so streng wie ihre Asserts.*
 
 ---
 
@@ -293,6 +313,7 @@ Das Testkonzept aus Kapitel 6 ist bereits ein Baustein davon.
 | k6 | Kapitel 5 |
 | GitHub Actions | Kapitel 7 |
 | Docker Compose | Kapitel 7 |
+| PHPUnit 10.5 / Composer | Kapitel 9 |
 
 ---
 
