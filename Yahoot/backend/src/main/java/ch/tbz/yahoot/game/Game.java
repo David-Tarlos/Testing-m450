@@ -4,17 +4,24 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /** Die Spielregeln einer Partie. Reines Java: Die aktuelle Zeit wird immer von aussen uebergeben. */
 public final class Game {
 
+    private static final Duration FREEZE_DURATION = Duration.ofSeconds(3);
+
     private final List<Question> questions;
+    private final Set<Player> frozen = new HashSet<>();
+    private final Set<Player> shuffled = new HashSet<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
     private final Map<Player, Answer> answers = new LinkedHashMap<>();
+    private final Map<Player, PlayedCard> playedCards = new LinkedHashMap<>();
     private GamePhase phase = GamePhase.LOBBY;
     private int questionIndex;
     private Instant questionStartedAt;
@@ -47,6 +54,9 @@ public final class Game {
         if (answers.containsKey(player)) {
             return AnswerResult.ALREADY_ANSWERED;
         }
+        if (frozen.contains(player) && answerTime.compareTo(FREEZE_DURATION) < 0) {
+            return AnswerResult.FROZEN;
+        }
         answers.put(player, new Answer(option, answerTime));
         return AnswerResult.ACCEPTED;
     }
@@ -69,9 +79,29 @@ public final class Game {
         phase = GamePhase.SABOTAGE;
     }
 
+    public void playCard(String playerName, Card card, String targetName) {
+        requirePhase(GamePhase.SABOTAGE);
+        Player player = player(playerName);
+        Player target = player(targetName);
+        if (playedCards.containsKey(player)) {
+            throw new GameRuleException("Pro Sabotage-Phase ist nur eine Karte erlaubt");
+        }
+        boolean mustTargetSelf = card == Card.SHIELD;
+        if (mustTargetSelf != (target == player)) {
+            throw new GameRuleException("Das Schild gilt nur fuer dich, Angriffe nur fuer andere");
+        }
+        if (player.energy() < card.cost()) {
+            throw new GameRuleException("Zu wenig Energie fuer " + card);
+        }
+        player.addEnergy(-card.cost());
+        playedCards.put(player, new PlayedCard(card, target));
+    }
+
     public void nextQuestion(Instant now) {
         requirePhase(GamePhase.SABOTAGE);
         beginQuestion(questionIndex + 1, now);
+        applyPlayedCards();
+        playedCards.clear();
     }
 
     public GamePhase phase() {
@@ -80,6 +110,10 @@ public final class Game {
 
     public Question currentQuestion() {
         return questions.get(questionIndex);
+    }
+
+    public boolean isShuffled(String playerName) {
+        return shuffled.contains(player(playerName));
     }
 
     public Player player(String name) {
@@ -101,7 +135,19 @@ public final class Game {
         questionIndex = index;
         questionStartedAt = now;
         answers.clear();
+        frozen.clear();
+        shuffled.clear();
         phase = GamePhase.QUESTION;
+    }
+
+    private void applyPlayedCards() {
+        playedCards.forEach((player, played) -> {
+            switch (played.card()) {
+                case FREEZE -> frozen.add(played.target());
+                case SHUFFLE -> shuffled.add(played.target());
+                default -> { }
+            }
+        });
     }
 
     private boolean isLastQuestion() {
@@ -119,5 +165,8 @@ public final class Game {
     }
 
     private record Answer(int option, Duration time) {
+    }
+
+    private record PlayedCard(Card card, Player target) {
     }
 }
