@@ -1,0 +1,8 @@
+**/node_modules
+**/target
+**/dist
+**/.angular
+**/coverage
+**/reports
+e2e
+docs
