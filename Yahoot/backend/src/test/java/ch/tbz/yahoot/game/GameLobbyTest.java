@@ -42,6 +42,13 @@ class GameLobbyTest {
     }
 
     @Test
+    void answerBeforeTheStartIsRejected() {
+        game.join("Lena");
+
+        assertThat(game.answer("Lena", 1, NOW)).isEqualTo(AnswerResult.TOO_LATE);
+    }
+
+    @Test
     void nobodyCanJoinAfterTheStart() {
         game.join("Lena");
         game.start(NOW);

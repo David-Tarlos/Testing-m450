@@ -50,8 +50,11 @@ public final class Game {
 
     public AnswerResult answer(String playerName, int option, Instant now) {
         Player player = player(playerName);
+        if (phase != GamePhase.QUESTION) {
+            return AnswerResult.TOO_LATE;
+        }
         Duration answerTime = Duration.between(questionStartedAt, now);
-        if (phase != GamePhase.QUESTION || answerTime.compareTo(currentQuestion().timeLimit()) > 0) {
+        if (answerTime.compareTo(currentQuestion().timeLimit()) > 0) {
             return AnswerResult.TOO_LATE;
         }
         if (answers.containsKey(player)) {
