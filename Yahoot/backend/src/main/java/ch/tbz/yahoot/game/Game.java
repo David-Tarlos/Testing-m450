@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +20,8 @@ public final class Game {
     private final List<Question> questions;
     private final Set<Player> frozen = new HashSet<>();
     private final Set<Player> shuffled = new HashSet<>();
+    private final Map<Player, List<Player>> thieves = new HashMap<>();
+    private final List<Attack> lastAttacks = new ArrayList<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
     private final Map<Player, Answer> answers = new LinkedHashMap<>();
     private final Map<Player, PlayedCard> playedCards = new LinkedHashMap<>();
@@ -66,12 +69,21 @@ public final class Game {
         Question question = currentQuestion();
         answers.forEach((player, answer) -> {
             boolean correct = answer.option() == question.correctOption();
-            player.addScore(ScoreCalculator.points(correct, answer.time(), question.timeLimit()));
+            int points = ScoreCalculator.points(correct, answer.time(), question.timeLimit());
+            player.addScore(points - stealFrom(player, points));
             if (correct) {
                 player.addEnergy(1);
             }
         });
+        giveComebackEnergy();
         phase = isLastQuestion() ? GamePhase.FINISHED : GamePhase.REVEAL;
+    }
+
+    private void giveComebackEnergy() {
+        List<Player> ranking = ranking();
+        int lastThird = ranking.size() / 3;
+        ranking.subList(ranking.size() - lastThird, ranking.size())
+                .forEach(player -> player.addEnergy(1));
     }
 
     public void openSabotage() {
@@ -112,6 +124,11 @@ public final class Game {
         return questions.get(questionIndex);
     }
 
+    /** Die Angriffe aus der letzten Sabotage-Phase, in der Reihenfolge, in der sie gespielt wurden. */
+    public List<Attack> lastAttacks() {
+        return List.copyOf(lastAttacks);
+    }
+
     public boolean isShuffled(String playerName) {
         return shuffled.contains(player(playerName));
     }
@@ -137,17 +154,49 @@ public final class Game {
         answers.clear();
         frozen.clear();
         shuffled.clear();
+        thieves.clear();
         phase = GamePhase.QUESTION;
     }
 
+    /** Schilde zaehlen zuerst, damit sie auch gegen Angriffe aus derselben Phase wirken. */
     private void applyPlayedCards() {
+        lastAttacks.clear();
         playedCards.forEach((player, played) -> {
-            switch (played.card()) {
-                case FREEZE -> frozen.add(played.target());
-                case SHUFFLE -> shuffled.add(played.target());
-                default -> { }
+            if (played.card() == Card.SHIELD) {
+                player.raiseShield();
             }
         });
+        playedCards.forEach((player, played) -> {
+            if (played.card() != Card.SHIELD) {
+                applyAttack(player, played);
+            }
+        });
+    }
+
+    private void applyAttack(Player attacker, PlayedCard played) {
+        Player target = played.target();
+        boolean blocked = target.consumeShield();
+        lastAttacks.add(new Attack(attacker.name(), played.card(), target.name(), blocked));
+        if (blocked) {
+            return;
+        }
+        switch (played.card()) {
+            case FREEZE -> frozen.add(target);
+            case SHUFFLE -> shuffled.add(target);
+            case STEAL -> thieves.computeIfAbsent(target, victim -> new ArrayList<>()).add(attacker);
+            case SHIELD -> throw new IllegalArgumentException("Das Schild ist kein Angriff");
+        }
+    }
+
+    /** Jeder Dieb bekommt die Hälfte dessen, was das Opfer noch übrig hat. */
+    private int stealFrom(Player victim, int points) {
+        int remaining = points;
+        for (Player thief : thieves.getOrDefault(victim, List.of())) {
+            int stolen = remaining / 2;
+            thief.addScore(stolen);
+            remaining -= stolen;
+        }
+        return points - remaining;
     }
 
     private boolean isLastQuestion() {
