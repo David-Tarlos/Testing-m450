@@ -23,8 +23,9 @@ sind die Tests schnell und hängen nicht von echter Zeit ab.
 Die Pipeline (`.github/workflows/yahoot.yml`) führt bei jedem Push alle Tests aus und legt die Reports
 als Artefakte ab. Das Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind.
 
-**Stand:** Grundgerüst mit ersten Tests. Die Tabelle beschreibt das Ziel, die meisten Tests kommen mit
-den nächsten Paketen.
+**Stand:** Die Spielregeln sind nach TDD umgesetzt und getestet. Die Tabelle beschreibt das Ziel:
+GameService mit Mocks, WebSocket-Integration, Oberfläche und die meisten Playwright-Tests kommen mit den
+nächsten Paketen.
 
 ## Tests lokal ausführen
 
