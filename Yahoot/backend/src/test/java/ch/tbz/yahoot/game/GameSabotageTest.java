@@ -105,6 +105,82 @@ class GameSabotageTest {
         assertThat(game.isShuffled("Lena")).isFalse();
     }
 
+    @Test
+    void stealTakesHalfOfTheVictimsPointsForThatQuestion() {
+        game.playCard("Lena", Card.STEAL, "Tim");
+        game.nextQuestion(SECOND_QUESTION);
+        game.answer("Tim", RIGHT, SECOND_QUESTION);
+
+        game.closeQuestion();
+
+        assertThat(game.player("Tim").score()).isEqualTo(1000 + 500);
+        assertThat(game.player("Lena").score()).isEqualTo(1000 + 500);
+    }
+
+    @Test
+    void stealGivesNothingWhenTheVictimAnswersWrong() {
+        game.playCard("Lena", Card.STEAL, "Tim");
+        game.nextQuestion(SECOND_QUESTION);
+        game.answer("Tim", 0, SECOND_QUESTION);
+
+        game.closeQuestion();
+
+        assertThat(game.player("Lena").score()).isEqualTo(1000);
+        assertThat(game.player("Tim").score()).isEqualTo(1000);
+    }
+
+    @Test
+    void secondThiefOnlyGetsHalfOfWhatIsLeft() {
+        Game threePlayers = threePlayersInSabotage();
+        threePlayers.playCard("Lena", Card.STEAL, "Tim");
+        threePlayers.playCard("Mia", Card.STEAL, "Tim");
+        threePlayers.nextQuestion(SECOND_QUESTION);
+        threePlayers.answer("Tim", RIGHT, SECOND_QUESTION);
+
+        threePlayers.closeQuestion();
+
+        assertThat(threePlayers.player("Lena").score()).isEqualTo(1000 + 500);
+        assertThat(threePlayers.player("Mia").score()).isEqualTo(250);
+        assertThat(threePlayers.player("Tim").score()).isEqualTo(1000 + 250);
+    }
+
+    @Test
+    void shieldBlocksTheAttackAndTheRevealShowsIt() {
+        game.playCard("Lena", Card.FREEZE, "Tim");
+        game.playCard("Tim", Card.SHIELD, "Tim");
+
+        game.nextQuestion(SECOND_QUESTION);
+
+        assertThat(game.answer("Tim", RIGHT, SECOND_QUESTION)).isEqualTo(AnswerResult.ACCEPTED);
+        assertThat(game.lastAttacks())
+                .containsExactly(new Attack("Lena", Card.FREEZE, "Tim", true));
+    }
+
+    @Test
+    void shieldBlocksOnlyOneAttack() {
+        Game threePlayers = threePlayersInSabotage();
+        threePlayers.playCard("Lena", Card.FREEZE, "Tim");
+        threePlayers.playCard("Mia", Card.SHUFFLE, "Tim");
+        threePlayers.playCard("Tim", Card.SHIELD, "Tim");
+
+        threePlayers.nextQuestion(SECOND_QUESTION);
+
+        assertThat(threePlayers.lastAttacks()).containsExactly(
+                new Attack("Lena", Card.FREEZE, "Tim", true),
+                new Attack("Mia", Card.SHUFFLE, "Tim", false));
+        assertThat(threePlayers.isShuffled("Tim")).isTrue();
+    }
+
+    @Test
+    void lastThirdOfTheRankingGetsExtraEnergy() {
+        Game threePlayers = threePlayersInSabotage();
+
+        // Mia antwortet falsch und liegt hinten: Start 1 + Comeback 1
+        assertThat(threePlayers.player("Mia").energy()).isEqualTo(2);
+        assertThat(threePlayers.player("Lena").energy()).isEqualTo(2);
+        assertThat(threePlayers.player("Tim").energy()).isEqualTo(2);
+    }
+
     private Game threePlayersInSabotage() {
         Game result = new Game(List.of(
                 new Question("2 + 2?", List.of("3", "4"), RIGHT, Duration.ofSeconds(20)),
