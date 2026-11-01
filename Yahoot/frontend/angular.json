@@ -70,7 +70,15 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "configurations": {
+            "ci": {
+              "watch": false,
+              "coverage": true,
+              "coverageReporters": ["html", "lcov", "text-summary"],
+              "reporters": ["default", ["junit", { "outputFile": "reports/junit.xml" }]]
+            }
+          }
         }
       }
     }
