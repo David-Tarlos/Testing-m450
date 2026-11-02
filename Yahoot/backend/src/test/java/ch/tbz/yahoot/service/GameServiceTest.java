@@ -183,6 +183,87 @@ class GameServiceTest {
     }
 
     @Test
+    void timerOnlyEndsTheSabotageOfItsOwnRound() {
+        String code = service.createGame("mathe");
+        service.join(code, "Lena");
+        service.start(code);
+
+        assertThat(service.nextQuestionIfSabotage(code, 1)).isFalse();
+        service.closeQuestion(code);
+        service.openSabotage(code);
+
+        assertThat(service.nextQuestionIfSabotage(code, 2)).isFalse();
+        assertThat(service.nextQuestionIfSabotage(code, 1)).isTrue();
+        assertThat(service.phase(code)).isEqualTo(GamePhase.QUESTION);
+        assertThat(service.round(code)).isEqualTo(2);
+    }
+
+    @Test
+    void openingSabotageAnnouncesRoundAndTime() {
+        String code = service.createGame("mathe");
+        service.join(code, "Lena");
+        service.start(code);
+        service.closeQuestion(code);
+
+        service.openSabotage(code);
+
+        verify(events).publish(new GameEvent.SabotageOpened(code, 1, 10, service.ranking(code)));
+    }
+
+    @Test
+    void snapshotOfTheLobbyContainsNoQuestion() {
+        String code = service.createGame("mathe");
+        service.join(code, "Lena");
+
+        GameSnapshot snapshot = service.snapshot(code);
+
+        assertThat(snapshot.phase()).isEqualTo(GamePhase.LOBBY);
+        assertThat(snapshot.players()).containsExactly("Lena");
+        assertThat(snapshot.text()).isNull();
+        assertThat(snapshot.options()).isEmpty();
+        assertThat(snapshot.correctOption()).isNull();
+    }
+
+    @Test
+    void snapshotHidesTheSolutionWhileTheQuestionIsOpen() {
+        Clock clock = mock(Clock.class);
+        when(clock.instant()).thenReturn(NOW);
+        GameService withClock = new GameService(quizzes, events, clock, new Random(42));
+        String code = withClock.createGame("mathe");
+        withClock.join(code, "Lena");
+        withClock.start(code);
+        when(clock.instant()).thenReturn(NOW.plusSeconds(5));
+
+        GameSnapshot snapshot = withClock.snapshot(code);
+
+        assertThat(snapshot.text()).isEqualTo("2 + 2?");
+        assertThat(snapshot.round()).isEqualTo(1);
+        assertThat(snapshot.total()).isEqualTo(2);
+        assertThat(snapshot.secondsLeft()).isEqualTo(15);
+        assertThat(snapshot.correctOption()).isNull();
+    }
+
+    @Test
+    void snapshotShowsSolutionAndAttacksAfterTheQuestion() {
+        String code = service.createGame("mathe");
+        service.join(code, "Lena");
+        service.join(code, "Tim");
+        service.start(code);
+        service.closeQuestion(code);
+        service.openSabotage(code);
+        service.playCard(code, "Lena", Card.FREEZE, "Tim");
+        service.nextQuestion(code);
+        service.closeQuestion(code);
+
+        GameSnapshot snapshot = service.snapshot(code);
+
+        assertThat(snapshot.correctOption()).isEqualTo(RIGHT);
+        assertThat(snapshot.attacks()).singleElement()
+                .satisfies(attack -> assertThat(attack.attacker()).isEqualTo("Lena"));
+        assertThat(snapshot.secondsLeft()).isZero();
+    }
+
+    @Test
     void finishedGamesCanBeRemoved() {
         String code = service.createGame("mathe");
 

@@ -25,6 +25,15 @@ class RoundTimerTest {
     }
 
     @Test
+    void endsTheSabotagePhaseOfItsRoundAfterTheTime() {
+        RoundTimer timer = new RoundTimer(games, new SimpleAsyncTaskScheduler());
+
+        timer.onSabotageOpened(new GameEvent.SabotageOpened("ABCDEF", 2, 0, List.of()));
+
+        verify(games, org.mockito.Mockito.timeout(TimeUnit.SECONDS.toMillis(2))).nextQuestionIfSabotage("ABCDEF", 2);
+    }
+
+    @Test
     void doesNothingBeforeTheTimeIsUp() throws InterruptedException {
         RoundTimer timer = new RoundTimer(games, new SimpleAsyncTaskScheduler());
 

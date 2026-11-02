@@ -94,6 +94,76 @@ class GameApiIT {
     }
 
     @Test
+    void playerCanRejoinWithTheTokenAfterLosingTheConnection() throws Exception {
+        Map<String, Object> game = createGame("test-langsam");
+        String code = (String) game.get("code");
+        Inbox events = host.subscribe("/topic/games/" + code);
+        Inbox joined = phone.subscribe("/user/queue/joined");
+        phone.send("/app/games/" + code + "/join", Map.of("name", "Lena"));
+        String token = (String) joined.next().get("playerToken");
+        events.next("PlayerJoined");
+        host.send("/app/games/" + code + "/start", Map.of("hostToken", game.get("hostToken")));
+        events.next("QuestionStarted");
+
+        phone.close();
+        phone = StompTestClient.connect(port);
+        Inbox rejoined = phone.subscribe("/user/queue/joined");
+        Inbox answers = phone.subscribe("/user/queue/answers");
+        phone.send("/app/games/" + code + "/rejoin", Map.of("playerToken", token));
+
+        assertThat(rejoined.next()).containsEntry("name", "Lena").containsEntry("playerToken", token);
+        phone.send("/app/games/" + code + "/answer", Map.of("option", 1));
+        assertThat(answers.next()).containsEntry("result", "ACCEPTED");
+    }
+
+    @Test
+    void rejoinWithAWrongTokenIsRefused() throws Exception {
+        String code = (String) createGame("test-langsam").get("code");
+        Inbox errors = phone.subscribe("/user/queue/errors");
+
+        phone.send("/app/games/" + code + "/rejoin", Map.of("playerToken", "geraten"));
+
+        assertThat(errors.next().get("message")).asString().contains("wieder verbinden");
+    }
+
+    @Test
+    void playedCardIsConfirmedToThePlayer() throws Exception {
+        Map<String, Object> game = createGame("test-langsam");
+        String code = (String) game.get("code");
+        Map<String, Object> hostCommand = Map.of("hostToken", game.get("hostToken"));
+        Inbox events = host.subscribe("/topic/games/" + code);
+        Inbox cards = phone.subscribe("/user/queue/cards");
+        phone.send("/app/games/" + code + "/join", Map.of("name", "Lena"));
+        events.next("PlayerJoined");
+        host.send("/app/games/" + code + "/join", Map.of("name", "Tim"));
+        events.next("PlayerJoined");
+        host.send("/app/games/" + code + "/start", hostCommand);
+        events.next("QuestionStarted");
+        host.send("/app/games/" + code + "/close", hostCommand);
+        events.next("QuestionClosed");
+        host.send("/app/games/" + code + "/sabotage", hostCommand);
+        events.next("SabotageOpened");
+
+        phone.send("/app/games/" + code + "/card", Map.of("card", "FREEZE", "target", "Tim"));
+
+        assertThat(cards.next()).containsEntry("card", "FREEZE").containsEntry("target", "Tim");
+    }
+
+    @Test
+    void stateContainsTheOpenQuestionWithoutTheSolution() throws Exception {
+        Map<String, Object> game = createGame("test-langsam");
+        String code = (String) game.get("code");
+        Inbox events = host.subscribe("/topic/games/" + code);
+        phone.send("/app/games/" + code + "/join", Map.of("name", "Lena"));
+        events.next("PlayerJoined");
+        host.send("/app/games/" + code + "/start", Map.of("hostToken", game.get("hostToken")));
+        events.next("QuestionStarted");
+
+        assertThat(get("/api/games/" + code).body())
+                .contains("\"phase\":\"QUESTION\"", "\"text\":\"2 + 2?\"", "\"correctOption\":null", "\"secondsLeft\"");
+    }
+
+    @Test
     void onlyTheHostCanStartTheGame() throws Exception {
         String code = (String) createGame("test-langsam").get("code");
         Inbox errors = phone.subscribe("/user/queue/errors");
