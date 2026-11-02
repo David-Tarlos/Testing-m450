@@ -42,7 +42,7 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: JDK ${{ env.JAVA_VERSION }} einrichten
         uses: actions/setup-java@v4
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: JDK ${{ env.JAVA_VERSION }} einrichten
         uses: actions/setup-java@v4
