@@ -25,9 +25,9 @@ und legt die Reports als Artefakte ab. Ein neuer Push bricht den alten Lauf auf 
 Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind. Es bekommt neben
 `latest` auch den Commit-Hash als Tag, damit sich jede Version zurückverfolgen lässt.
 
-**Stand:** Spielregeln, GameService mit Mocks und die WebSocket-Schnittstelle sind umgesetzt und
-getestet. Die Nachrichten stehen in [docs/api.md](docs/api.md). Oberfläche und die meisten
-Playwright-Tests kommen mit den nächsten Paketen.
+**Stand:** Das Spiel ist von der Lobby bis zum Sieger spielbar und mit 57 Unit-Tests und 12
+Integrationstests im Backend, 51 Unit-Tests im Frontend und 13 Playwright-Tests abgesichert. Das
+vollständige [Testkonzept](docs/testkonzept.md) und die [Schnittstelle](docs/api.md) sind dokumentiert.
 
 ## Tests lokal ausführen
 
@@ -48,8 +48,7 @@ Fehler von npm 11.4.2, `npx npm@11.21.1 install` funktioniert. `npm ci` ist davo
 
 ## KI-Nutzung
 
-Ich nutze einen KI-Agenten als Werkzeug. Idee, Technologien, Anforderungen und Umfang gebe ich vor, und
-ich entscheide, was ins Projekt kommt: Jedes Paket prüfe ich und übernehme es über einen eigenen Pull
-Request.
+Wir nutzen einen KI-Agenten als Werkzeug. Idee, Technologien, Anforderungen und Umfang geben wir vor, und
+wir entscheiden, was ins Projekt kommt: Jedes Paket übernehmen wir über einen eigenen Pull Request.
 
 Der Agent erstellt nach diesen Vorgaben Code, Tests und Dokumentation.
