@@ -25,9 +25,9 @@ und legt die Reports als Artefakte ab. Ein neuer Push bricht den alten Lauf auf 
 Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind. Es bekommt neben
 `latest` auch den Commit-Hash als Tag, damit sich jede Version zurückverfolgen lässt.
 
-**Stand:** Die Spielregeln sind nach TDD umgesetzt und getestet. Die Tabelle beschreibt das Ziel:
-GameService mit Mocks, WebSocket-Integration, Oberfläche und die meisten Playwright-Tests kommen mit den
-nächsten Paketen.
+**Stand:** Spielregeln, GameService mit Mocks und die WebSocket-Schnittstelle sind umgesetzt und
+getestet. Die Nachrichten stehen in [docs/api.md](docs/api.md). Oberfläche und die meisten
+Playwright-Tests kommen mit den nächsten Paketen.
 
 ## Tests lokal ausführen
 

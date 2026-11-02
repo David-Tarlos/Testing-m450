@@ -1,0 +1,10 @@
+{
+  "title": "Informatik-Grundlagen",
+  "questions": [
+    { "text": "Wie viele Bit hat ein Byte?", "options": ["4", "8", "16", "32"], "correct": 1, "seconds": 10 },
+    { "text": "Wofür steht HTTP?", "options": ["HyperText Transfer Protocol", "High Transfer Text Protocol", "Host Text Transport Protocol"], "correct": 0, "seconds": 15 },
+    { "text": "Welcher Test prüft das ganze System aus Sicht des Benutzers?", "options": ["Unit-Test", "Integrationstest", "End-to-End-Test", "Mutationstest"], "correct": 2, "seconds": 20 },
+    { "text": "Was kommt bei TDD zuerst?", "options": ["Implementierung", "Refactoring", "Ein roter Test", "Code-Review"], "correct": 2, "seconds": 15 },
+    { "text": "Welcher HTTP-Statuscode heisst «Not Found»?", "options": ["200", "301", "404", "500"], "correct": 2, "seconds": 10 }
+  ]
+}

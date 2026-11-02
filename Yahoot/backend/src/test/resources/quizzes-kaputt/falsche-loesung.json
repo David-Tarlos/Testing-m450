@@ -1,0 +1,6 @@
+{
+  "title": "Kaputt",
+  "questions": [
+    { "text": "2 + 2?", "options": ["3", "4"], "correct": 5, "seconds": 20 }
+  ]
+}
