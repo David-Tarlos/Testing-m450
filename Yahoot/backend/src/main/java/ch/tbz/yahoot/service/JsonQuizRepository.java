@@ -28,7 +28,7 @@ public class JsonQuizRepository implements QuizRepository {
 
     @Autowired
     public JsonQuizRepository() {
-        this("classpath:quizzes/*.json");
+        this("classpath*:quizzes/*.json");
     }
 
     JsonQuizRepository(String locationPattern) {

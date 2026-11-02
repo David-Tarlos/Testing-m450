@@ -10,7 +10,7 @@ class JsonQuizRepositoryTest {
 
     @Test
     void loadsTheQuizzesShippedWithTheApp() {
-        JsonQuizRepository repository = new JsonQuizRepository("classpath:quizzes/*.json");
+        JsonQuizRepository repository = new JsonQuizRepository("classpath*:quizzes/*.json");
 
         assertThat(repository.findAll()).isNotEmpty();
         Quiz quiz = repository.findById("allgemeinwissen").orElseThrow();
@@ -21,14 +21,14 @@ class JsonQuizRepositoryTest {
 
     @Test
     void unknownQuizIsEmpty() {
-        JsonQuizRepository repository = new JsonQuizRepository("classpath:quizzes/*.json");
+        JsonQuizRepository repository = new JsonQuizRepository("classpath*:quizzes/*.json");
 
         assertThat(repository.findById("gibts-nicht")).isEmpty();
     }
 
     @Test
     void brokenQuizStopsTheStartWithAClearMessage() {
-        assertThatThrownBy(() -> new JsonQuizRepository("classpath:quizzes-kaputt/*.json"))
+        assertThatThrownBy(() -> new JsonQuizRepository("classpath*:quizzes-kaputt/*.json"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("falsche-loesung.json");
     }
