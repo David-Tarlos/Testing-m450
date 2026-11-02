@@ -1,0 +1,25 @@
+# Meldet einmal pro Woche veraltete Abhaengigkeiten von Yahoot als Pull Request.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /Yahoot/backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /Yahoot/frontend
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*"]
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /Yahoot/e2e
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
