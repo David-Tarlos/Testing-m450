@@ -1,6 +1,7 @@
 # Pipeline fuer das Modulprojekt Yahoot.
 # Auf jedem Branch: bauen, alle Tests ausfuehren, Reports ablegen, Docker-Image bauen.
 # Nur auf main: das getestete Image zusaetzlich veroeffentlichen.
+# Pull Requests laufen ebenfalls durch, damit das Review den Stand der Tests sieht.
 
 name: yahoot
 
@@ -9,7 +10,16 @@ on:
     paths:
       - 'Yahoot/**'
       - '.github/workflows/yahoot.yml'
+  pull_request:
+    paths:
+      - 'Yahoot/**'
+      - '.github/workflows/yahoot.yml'
   workflow_dispatch:
+
+# Ein neuer Push bricht den alten Lauf auf demselben Branch ab, main laeuft immer zu Ende.
+concurrency:
+  group: yahoot-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # Der Test-Report erscheint als eigener Check beim Commit und braucht dafuer Schreibrechte.
 permissions:
@@ -26,6 +36,7 @@ jobs:
   backend:
     name: backend (Unit + Integration)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: Yahoot/backend
@@ -61,6 +72,7 @@ jobs:
   frontend:
     name: frontend (Unit)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: Yahoot/frontend
@@ -96,6 +108,7 @@ jobs:
   e2e:
     name: end-to-end (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
@@ -107,6 +120,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            Yahoot/frontend/package-lock.json
+            Yahoot/e2e/package-lock.json
       - name: Frontend bauen
         working-directory: Yahoot/frontend
         run: |
@@ -145,7 +162,10 @@ jobs:
   deploy:
     name: deploy (Docker-Image)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: e2e
+    # Bei Pull Requests reicht der Test, das Image entsteht beim Push auf den Branch.
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -163,4 +183,8 @@ jobs:
         with:
           context: Yahoot
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/david-tarlos/yahoot:latest
+          tags: |
+            ghcr.io/david-tarlos/yahoot:latest
+            ghcr.io/david-tarlos/yahoot:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
