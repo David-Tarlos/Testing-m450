@@ -5,6 +5,8 @@ test('Startseite laedt im Desktop-Browser', async ({ page }) => {
 
   await expect(page).toHaveTitle('Yahoot');
   await expect(page.getByRole('heading', { name: 'Yahoot' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Spiel hosten' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Mitspielen' })).toBeVisible();
 });
 
 test('Startseite laedt auf dem Handy', async ({ browser }) => {
@@ -14,5 +16,7 @@ test('Startseite laedt auf dem Handy', async ({ browser }) => {
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'Yahoot' })).toBeVisible();
+  await page.getByRole('link', { name: 'Mitspielen' }).click();
+  await expect(page.getByLabel('Spielcode')).toBeVisible();
   await context.close();
 });
