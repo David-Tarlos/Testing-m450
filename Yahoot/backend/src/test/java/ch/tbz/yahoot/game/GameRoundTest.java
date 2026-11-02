@@ -37,7 +37,8 @@ class GameRoundTest {
         assertThat(game.player("Lena").score()).isEqualTo(1000);
         assertThat(game.player("Lena").energy()).isEqualTo(2);
         assertThat(game.player("Tim").score()).isZero();
-        assertThat(game.player("Tim").energy()).isEqualTo(1);
+        // Tim bekommt keine Energie fuer die Antwort, aber als Letzter die Comeback-Energie.
+        assertThat(game.player("Tim").energy()).isEqualTo(2);
     }
 
     @Test
@@ -48,6 +49,14 @@ class GameRoundTest {
 
         game.closeQuestion();
         assertThat(game.player("Lena").score()).isZero();
+    }
+
+    @Test
+    void answerOutsideTheOptionsIsRejectedAndDoesNotCount() {
+        assertThat(game.answer("Lena", 2, START)).isEqualTo(AnswerResult.INVALID_OPTION);
+        assertThat(game.answer("Lena", -1, START)).isEqualTo(AnswerResult.INVALID_OPTION);
+
+        assertThat(game.answer("Lena", RIGHT, START)).isEqualTo(AnswerResult.ACCEPTED);
     }
 
     @Test

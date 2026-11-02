@@ -4,5 +4,6 @@ public enum AnswerResult {
     ACCEPTED,
     ALREADY_ANSWERED,
     FROZEN,
-    TOO_LATE
+    TOO_LATE,
+    INVALID_OPTION
 }

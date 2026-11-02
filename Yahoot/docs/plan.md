@@ -12,8 +12,9 @@ Eine Runde läuft so ab: Frage → Antworten → Auflösung und Rangliste → 10
 |---|---|
 | Punkte | nur für richtige Antworten, je schneller desto mehr |
 | Energie | Start 1, +1 pro richtige Antwort |
-| Comeback | das hinterste Drittel der Rangliste bekommt +1 Energie extra |
+| Comeback | das hinterste Drittel der Rangliste bekommt +1 Energie extra, ab zwei Spielern mindestens einer; Punktgleiche an der Grenze zählen mit, bei Gleichstand aller niemand |
 | Limit | pro Spieler eine Karte pro Sabotage-Phase |
+| Namen | 1 bis 20 Zeichen, Leerzeichen am Rand fallen weg, Gross-/Kleinschreibung zählt nicht |
 
 | Karte | Kosten | Wirkung bei der nächsten Frage |
 |---|---|---|

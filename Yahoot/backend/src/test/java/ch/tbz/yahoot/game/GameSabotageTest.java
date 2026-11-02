@@ -181,6 +181,47 @@ class GameSabotageTest {
         assertThat(threePlayers.player("Tim").energy()).isEqualTo(2);
     }
 
+    @Test
+    void withTwoPlayersTheLastOneStillGetsComebackEnergy() {
+        Game twoPlayers = gameWith("Lena", "Tim");
+        twoPlayers.answer("Lena", RIGHT, START);
+        twoPlayers.closeQuestion();
+
+        assertThat(twoPlayers.player("Lena").energy()).isEqualTo(2);
+        assertThat(twoPlayers.player("Tim").energy()).isEqualTo(2);
+    }
+
+    @Test
+    void playersTiedWithTheLastOneAlsoGetComebackEnergy() {
+        Game fourPlayers = gameWith("Lena", "Tim", "Mia", "Noah");
+        fourPlayers.answer("Lena", RIGHT, START);
+        fourPlayers.answer("Tim", RIGHT, START);
+        fourPlayers.closeQuestion();
+
+        // Ein Drittel von 4 ist 1 Platz, Mia und Noah teilen sich aber den letzten Rang.
+        assertThat(fourPlayers.player("Mia").energy()).isEqualTo(2);
+        assertThat(fourPlayers.player("Noah").energy()).isEqualTo(2);
+    }
+
+    @Test
+    void nobodyGetsComebackEnergyWhenAllAreTied() {
+        Game threePlayers = gameWith("Lena", "Tim", "Mia");
+        threePlayers.closeQuestion();
+
+        assertThat(threePlayers.ranking()).extracting(Player::energy).containsOnly(1);
+    }
+
+    private Game gameWith(String... names) {
+        Game result = new Game(List.of(
+                new Question("2 + 2?", List.of("3", "4"), RIGHT, Duration.ofSeconds(20)),
+                new Question("3 + 3?", List.of("5", "6"), RIGHT, Duration.ofSeconds(20))));
+        for (String name : names) {
+            result.join(name);
+        }
+        result.start(START);
+        return result;
+    }
+
     private Game threePlayersInSabotage() {
         Game result = new Game(List.of(
                 new Question("2 + 2?", List.of("3", "4"), RIGHT, Duration.ofSeconds(20)),

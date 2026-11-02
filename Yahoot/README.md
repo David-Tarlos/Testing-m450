@@ -29,14 +29,16 @@ nächsten Paketen.
 
 ## Tests lokal ausführen
 
+Alle Befehle laufen vom Ordner `Yahoot/` aus. Die Klammern sorgen dafür, dass man danach wieder dort steht.
+
 ```bash
-cd backend && mvn verify          # Unit und Integration, Report: target/site/jacoco
-cd frontend && npm run test:ci    # Report: coverage/ und reports/
+(cd backend && mvn verify)          # Unit und Integration, Report: target/site/jacoco
+(cd frontend && npm run test:ci)    # Report: coverage/ und reports/
 
 # End-to-End testet das fertige JAR
-cd frontend && npm run build
-cd backend && mvn -Pwith-frontend -DskipTests package
-cd e2e && npx playwright install chromium && npm test && npm run report
+(cd frontend && npm run build)
+(cd backend && mvn -Pwith-frontend -DskipTests package)
+(cd e2e && npx playwright install chromium && npm test && npm run report)
 ```
 
 Falls `npm install` mit `Cannot read properties of null (reading 'edgesOut')` abbricht: Das ist ein
