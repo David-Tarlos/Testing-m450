@@ -27,6 +27,7 @@ import { RankingList } from './ranking-list';
             [order]="order()"
             [chosen]="chosen()"
             [disabled]="frozen() || locked()"
+            [dimmed]="frozen() || locked()"
             (picked)="answer($event)"
           />
           @if (locked()) {
