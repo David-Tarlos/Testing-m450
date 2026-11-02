@@ -1,21 +1,10 @@
-import { Browser, devices, expect, Page, test } from '@playwright/test';
-
-async function phone(browser: Browser): Promise<Page> {
-  const context = await browser.newContext({ ...devices['Pixel 7'], baseURL: 'http://localhost:8080' });
-  return context.newPage();
-}
-
-async function hostGame(page: Page): Promise<string> {
-  await page.goto('/host');
-  await page.getByRole('button', { name: /Allgemeinwissen/ }).click();
-  const code = page.getByTestId('game-code');
-  await expect(code).toHaveText(/^[A-Z2-9]{6}$/);
-  return (await code.textContent())!;
-}
+import { expect, test } from '@playwright/test';
+import { hostGame, joinAs, phone } from './helpers';
 
 test('Handy tritt bei und der Beamer sieht den Namen', async ({ page, browser }) => {
   const code = await hostGame(page);
   await expect(page.getByRole('button', { name: 'Spiel starten' })).toBeDisabled();
+  await expect(page.getByAltText('QR-Code zum Beitreten')).toBeVisible();
 
   const lena = await phone(browser);
   await lena.goto('/join');
@@ -54,15 +43,13 @@ test('Doppelter Name wird abgelehnt', async ({ page, browser }) => {
 
 test('Host startet und alle sehen die erste Frage', async ({ page, browser }) => {
   const code = await hostGame(page);
-  const noah = await phone(browser);
-  await noah.goto(`/join?code=${code}`);
-  await noah.getByLabel('Dein Name').fill('Noah');
-  await noah.getByRole('button', { name: 'Mitspielen' }).click();
+  const noah = await joinAs(browser, code, 'Noah');
   await expect(page.getByRole('button', { name: 'Spiel starten' })).toBeEnabled();
 
   await page.getByRole('button', { name: 'Spiel starten' }).click();
 
   await expect(page.getByText('Frage 1 von 6')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Wie viele Kantone hat die Schweiz?' })).toBeVisible();
-  await expect(noah.getByText('Frage 1 von 6 läuft.')).toBeVisible();
+  await expect(noah.getByText('Frage 1 von 6')).toBeVisible();
+  await expect(noah.getByRole('button', { name: '26', exact: true })).toBeEnabled();
 });
