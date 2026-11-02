@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { vi } from 'vitest';
-import { AnswerResult } from '../core/game-events';
+import { AnswerResult, CardPlayed } from '../core/game-events';
 import { JoinedPlayer } from '../core/game-socket.service';
 import { EMPTY_VIEW, GameView } from '../core/game-view';
 
@@ -11,6 +11,7 @@ export function fakeSocket() {
     view: signal<GameView>(EMPTY_VIEW),
     joined: signal<JoinedPlayer | null>(null),
     lastAnswer: signal<AnswerResult | null>(null),
+    lastCard: signal<CardPlayed | null>(null),
     error: signal<string | null>(null),
     watch: vi.fn(),
     join: vi.fn(),

@@ -103,6 +103,19 @@ describe('PlayerGame', () => {
     expect(element.querySelector('li.me')?.textContent).toContain('Tim');
   });
 
+  it('zeigt in der Aufloesung die eigene falsche Antwort', () => {
+    showQuestion();
+    answers()[0].click();
+    socket.lastAnswer.set('ACCEPTED');
+    fixture.detectChanges();
+
+    socket.view.update((view) => ({ ...view, phase: 'REVEAL', correctOption: 1, ranking }));
+    fixture.detectChanges();
+
+    expect(element.querySelector('.wrong')?.textContent).toContain('3');
+    expect(element.querySelector('.correct')?.textContent).toContain('4');
+  });
+
   it('bietet in der Sabotage-Phase die anderen Spieler als Ziel an und spielt die Karte', () => {
     socket.view.set({ ...EMPTY_VIEW, phase: 'SABOTAGE', ranking, sabotageSeconds: 10 });
     fixture.detectChanges();

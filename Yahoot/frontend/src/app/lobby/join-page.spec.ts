@@ -39,7 +39,7 @@ describe('JoinPage', () => {
   });
 
   it('wartet nach dem Beitritt mit den anderen auf den Start', async () => {
-    socket.joined.set({ code: 'ABC234', name: 'Lena' });
+    socket.joined.set({ code: 'ABC234', name: 'Lena', playerToken: 'token' });
     socket.view.set({ ...EMPTY_VIEW, players: ['Lena', 'Tim'] });
     await render();
 

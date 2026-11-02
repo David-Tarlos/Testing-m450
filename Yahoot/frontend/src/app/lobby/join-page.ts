@@ -1,20 +1,21 @@
 import { Component, inject, input } from '@angular/core';
 import { GameSocketService } from '../core/game-socket.service';
+import { PlayerGame } from '../game/player-game';
 import { JoinForm, JoinRequest } from './join-form';
 import { PlayerList } from './player-list';
 
-/** Container fuers Handy: beitreten und auf den Start warten. Der Code kann im Link stehen (?code=). */
+/** Container fuers Handy: beitreten, warten und dann spielen. Der Code kann im Link stehen (?code=). */
 @Component({
   selector: 'app-join-page',
-  imports: [JoinForm, PlayerList],
+  imports: [JoinForm, PlayerGame, PlayerList],
   template: `
     @if (socket.joined(); as player) {
-      <h2>Hallo {{ player.name }}!</h2>
       @if (socket.view().phase === 'LOBBY') {
+        <h2>Hallo {{ player.name }}!</h2>
         <p class="waiting">Du bist drin. Gleich geht's los, schau auf den Beamer.</p>
         <app-player-list [players]="socket.view().players" />
-      } @else if (socket.view().question; as question) {
-        <p>Frage {{ question.number }} von {{ question.total }} läuft.</p>
+      } @else {
+        <app-player-game [name]="player.name" />
       }
     } @else {
       <h2>Mitspielen</h2>

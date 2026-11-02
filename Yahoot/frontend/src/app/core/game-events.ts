@@ -46,6 +46,8 @@ export interface QuestionClosed {
 export interface SabotageOpened {
   type: 'SabotageOpened';
   code: string;
+  number: number;
+  seconds: number;
   ranking: PlayerScore[];
 }
 
@@ -56,6 +58,26 @@ export interface GameFinished {
 }
 
 export type GameEvent = PlayerJoined | QuestionStarted | QuestionClosed | SabotageOpened | GameFinished;
+
+/** Der ganze Spielstand fuer alle, die neu laden oder die Verbindung verloren haben. */
+export interface GameSnapshot {
+  code: string;
+  phase: GamePhase;
+  round: number;
+  total: number;
+  text: string | null;
+  options: string[];
+  secondsLeft: number;
+  correctOption: number | null;
+  attacks: Attack[];
+  players: string[];
+  ranking: PlayerScore[];
+}
+
+export interface CardPlayed {
+  card: Card;
+  target: string;
+}
 
 export interface QuizSummary {
   id: string;

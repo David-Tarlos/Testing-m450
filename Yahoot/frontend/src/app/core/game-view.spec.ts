@@ -85,7 +85,7 @@ describe('applyEvent', () => {
   it('kennt Sabotage und Spielende', () => {
     const ranking = [{ name: 'Lena', score: 900, energy: 2 }];
 
-    expect(applyEvent(EMPTY_VIEW, { type: 'SabotageOpened', code: 'X', ranking }).phase).toBe('SABOTAGE');
+    expect(applyEvent(EMPTY_VIEW, { type: 'SabotageOpened', code: 'X', number: 1, seconds: 10, ranking }).phase).toBe('SABOTAGE');
     expect(applyEvent(EMPTY_VIEW, { type: 'GameFinished', code: 'X', ranking }).phase).toBe('FINISHED');
   });
 });
