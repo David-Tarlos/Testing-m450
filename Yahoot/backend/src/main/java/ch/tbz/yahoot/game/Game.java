@@ -16,6 +16,7 @@ import java.util.Set;
 public final class Game {
 
     private static final Duration FREEZE_DURATION = Duration.ofSeconds(3);
+    private static final int MAX_NAME_LENGTH = 20;
 
     private final List<Question> questions;
     private final Set<Player> frozen = new HashSet<>();
@@ -33,8 +34,9 @@ public final class Game {
         this.questions = List.copyOf(questions);
     }
 
-    public void join(String name) {
+    public void join(String rawName) {
         requirePhase(GamePhase.LOBBY);
+        String name = validName(rawName);
         if (players.putIfAbsent(key(name), new Player(name)) != null) {
             throw new GameRuleException("Name ist bereits vergeben: " + name);
         }
@@ -56,6 +58,9 @@ public final class Game {
         Duration answerTime = Duration.between(questionStartedAt, now);
         if (answerTime.compareTo(currentQuestion().timeLimit()) > 0) {
             return AnswerResult.TOO_LATE;
+        }
+        if (option < 0 || option >= currentQuestion().options().size()) {
+            return AnswerResult.INVALID_OPTION;
         }
         if (answers.containsKey(player)) {
             return AnswerResult.ALREADY_ANSWERED;
@@ -82,10 +87,22 @@ public final class Game {
         phase = isLastQuestion() ? GamePhase.FINISHED : GamePhase.REVEAL;
     }
 
+    /**
+     * Das hinterste Drittel bekommt Energie, ab zwei Spielern mindestens einer. Wer punktgleich mit der
+     * Grenze ist, bekommt sie auch. Liegen alle gleichauf, ist niemand hinten.
+     */
     private void giveComebackEnergy() {
         List<Player> ranking = ranking();
-        int lastThird = ranking.size() / 3;
-        ranking.subList(ranking.size() - lastThird, ranking.size())
+        if (ranking.size() < 2) {
+            return;
+        }
+        int lastThird = Math.max(1, ranking.size() / 3);
+        int cutoff = ranking.get(ranking.size() - lastThird).score();
+        if (cutoff == ranking.getFirst().score()) {
+            return;
+        }
+        ranking.stream()
+                .filter(player -> player.score() <= cutoff)
                 .forEach(player -> player.addEnergy(1));
     }
 
@@ -137,7 +154,7 @@ public final class Game {
     }
 
     public Player player(String name) {
-        Player player = players.get(key(name));
+        Player player = name == null ? null : players.get(key(name));
         if (player == null) {
             throw new GameRuleException("Unbekannter Spieler: " + name);
         }
@@ -212,8 +229,19 @@ public final class Game {
         }
     }
 
+    private static String validName(String rawName) {
+        String name = rawName == null ? "" : rawName.strip();
+        if (name.isEmpty()) {
+            throw new GameRuleException("Der Name darf nicht leer sein");
+        }
+        if (name.length() > MAX_NAME_LENGTH) {
+            throw new GameRuleException("Der Name darf hoechstens " + MAX_NAME_LENGTH + " Zeichen haben");
+        }
+        return name;
+    }
+
     private static String key(String name) {
-        return name.toLowerCase(Locale.ROOT);
+        return name.strip().toLowerCase(Locale.ROOT);
     }
 
     private record Answer(int option, Duration time) {
