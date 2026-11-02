@@ -144,6 +144,15 @@ public final class Game {
         return questions.get(questionIndex);
     }
 
+    /** Wie lange die offene Frage noch laeuft, ohne offene Frage null. */
+    public Duration timeLeft(Instant now) {
+        if (phase != GamePhase.QUESTION) {
+            return Duration.ZERO;
+        }
+        Duration left = currentQuestion().timeLimit().minus(Duration.between(questionStartedAt, now));
+        return left.isNegative() ? Duration.ZERO : left;
+    }
+
     /** Die Angriffe aus der letzten Sabotage-Phase, in der Reihenfolge, in der sie gespielt wurden. */
     public List<Attack> lastAttacks() {
         return List.copyOf(lastAttacks);

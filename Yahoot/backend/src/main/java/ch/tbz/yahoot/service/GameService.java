@@ -27,6 +27,7 @@ public class GameService {
     /** Ohne 0, O, 1 und I, damit man den Code vom Beamer fehlerfrei abtippen kann. */
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int CODE_LENGTH = 6;
+    private static final long SABOTAGE_SECONDS = 10;
 
     private final QuizRepository quizzes;
     private final GameEventPublisher events;
@@ -101,8 +102,19 @@ public class GameService {
     public void openSabotage(String code) {
         inGame(code, game -> {
             game.game.openSabotage();
-            events.publish(new GameEvent.SabotageOpened(normalize(code), ranking(game)));
+            events.publish(new GameEvent.SabotageOpened(normalize(code), game.round, SABOTAGE_SECONDS, ranking(game)));
             return null;
+        });
+    }
+
+    /** Fuer den Timer: geht nur weiter, wenn die Sabotage-Phase dieser Runde noch laeuft. */
+    public boolean nextQuestionIfSabotage(String code, int round) {
+        return inGame(code, game -> {
+            if (game.round != round || game.game.phase() != GamePhase.SABOTAGE) {
+                return false;
+            }
+            advance(normalize(code), game);
+            return true;
         });
     }
 
@@ -115,10 +127,25 @@ public class GameService {
 
     public void nextQuestion(String code) {
         inGame(code, game -> {
-            game.game.nextQuestion(clock.instant());
-            game.round++;
-            events.publish(questionStarted(normalize(code), game));
+            advance(normalize(code), game);
             return null;
+        });
+    }
+
+    public GameSnapshot snapshot(String code) {
+        return inGame(code, game -> {
+            GamePhase phase = game.game.phase();
+            Question question = phase == GamePhase.LOBBY ? null : game.game.currentQuestion();
+            boolean solved = question != null && phase != GamePhase.QUESTION;
+            long millisLeft = game.game.timeLeft(clock.instant()).toMillis();
+            return new GameSnapshot(normalize(code), phase, game.round, game.total,
+                    question == null ? null : question.text(),
+                    question == null ? List.of() : question.options(),
+                    (millisLeft + 999) / 1000,
+                    solved ? Integer.valueOf(question.correctOption()) : null,
+                    game.game.lastAttacks(),
+                    game.game.ranking().stream().map(Player::name).toList(),
+                    ranking(game));
         });
     }
 
@@ -140,6 +167,12 @@ public class GameService {
 
     public void remove(String code) {
         games.remove(normalize(code));
+    }
+
+    private void advance(String code, RunningGame game) {
+        game.game.nextQuestion(clock.instant());
+        game.round++;
+        events.publish(questionStarted(code, game));
     }
 
     private void close(String code, RunningGame game) {

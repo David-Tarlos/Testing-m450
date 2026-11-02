@@ -24,7 +24,7 @@ public sealed interface GameEvent {
             implements GameEvent {
     }
 
-    record SabotageOpened(String code, List<PlayerScore> ranking) implements GameEvent {
+    record SabotageOpened(String code, int number, long seconds, List<PlayerScore> ranking) implements GameEvent {
     }
 
     record GameFinished(String code, List<PlayerScore> ranking) implements GameEvent {

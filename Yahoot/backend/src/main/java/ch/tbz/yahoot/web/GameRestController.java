@@ -2,15 +2,14 @@ package ch.tbz.yahoot.web;
 
 import ch.tbz.yahoot.game.GameRuleException;
 import ch.tbz.yahoot.service.GameService;
+import ch.tbz.yahoot.service.GameSnapshot;
 import ch.tbz.yahoot.service.NotFoundException;
 import ch.tbz.yahoot.service.QuizRepository;
 import ch.tbz.yahoot.web.Messages.CreateGameRequest;
 import ch.tbz.yahoot.web.Messages.CreatedGame;
-import ch.tbz.yahoot.web.Messages.GameState;
 import ch.tbz.yahoot.web.Messages.QuizSummary;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,9 +51,8 @@ class GameRestController {
     }
 
     @GetMapping("/games/{code}")
-    GameState state(@PathVariable String code) {
-        return new GameState(code.toUpperCase(Locale.ROOT), games.phase(code), games.round(code),
-                games.ranking(code));
+    GameSnapshot state(@PathVariable String code) {
+        return games.snapshot(code);
     }
 
     @ExceptionHandler(NotFoundException.class)

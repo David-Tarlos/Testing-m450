@@ -5,11 +5,14 @@ import ch.tbz.yahoot.service.GameService;
 import ch.tbz.yahoot.service.NotFoundException;
 import ch.tbz.yahoot.web.Messages.AnswerReply;
 import ch.tbz.yahoot.web.Messages.AnswerRequest;
+import ch.tbz.yahoot.web.Messages.CardPlayed;
 import ch.tbz.yahoot.web.Messages.CardRequest;
 import ch.tbz.yahoot.web.Messages.ErrorMessage;
 import ch.tbz.yahoot.web.Messages.HostCommand;
 import ch.tbz.yahoot.web.Messages.JoinRequest;
 import ch.tbz.yahoot.web.Messages.Joined;
+import ch.tbz.yahoot.web.Messages.RejoinRequest;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -43,8 +46,15 @@ class GameMessageController {
     Joined join(@DestinationVariable String code, @Payload JoinRequest request, @Header(SESSION) String session) {
         games.join(code, request.name());
         String name = request.name().strip();
-        players.register(session, code, name);
-        return new Joined(code.strip().toUpperCase(java.util.Locale.ROOT), name);
+        return new Joined(normalize(code), name, players.register(session, code, name));
+    }
+
+    @MessageMapping("/rejoin")
+    @SendToUser(destinations = "/queue/joined", broadcast = false)
+    Joined rejoin(@DestinationVariable String code, @Payload RejoinRequest request, @Header(SESSION) String session) {
+        games.phase(code);
+        String name = players.rejoin(session, code, request.playerToken());
+        return new Joined(normalize(code), name, request.playerToken());
     }
 
     @MessageMapping("/answer")
@@ -55,11 +65,14 @@ class GameMessageController {
     }
 
     @MessageMapping("/card")
-    void playCard(@DestinationVariable String code, @Payload CardRequest request, @Header(SESSION) String session) {
+    @SendToUser(destinations = "/queue/cards", broadcast = false)
+    CardPlayed playCard(@DestinationVariable String code, @Payload CardRequest request,
+            @Header(SESSION) String session) {
         if (request.card() == null) {
             throw new GameRuleException("Keine Karte gewaehlt");
         }
         games.playCard(code, players.playerIn(session, code), request.card(), request.target());
+        return new CardPlayed(request.card(), request.target());
     }
 
     @MessageMapping("/start")
@@ -98,5 +111,9 @@ class GameMessageController {
     ErrorMessage handleUnexpected(Exception e) {
         LOG.warn("Unerwarteter Fehler bei einer Nachricht", e);
         return new ErrorMessage("Da ist etwas schiefgelaufen");
+    }
+
+    private static String normalize(String code) {
+        return code.strip().toUpperCase(Locale.ROOT);
     }
 }

@@ -10,8 +10,8 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 /**
- * Schliesst eine Frage, sobald die Zeit um ist, auch wenn der Host nichts tut. Fertige Spiele werden
- * nach einer halben Stunde aus dem Speicher entfernt.
+ * Schliesst eine Frage und beendet die Sabotage-Phase, sobald die Zeit um ist, auch wenn der Host nichts
+ * tut. Fertige Spiele werden nach einer halben Stunde aus dem Speicher entfernt.
  */
 @Component
 class RoundTimer {
@@ -32,6 +32,12 @@ class RoundTimer {
     void onQuestionStarted(GameEvent.QuestionStarted event) {
         Instant end = Instant.now().plusSeconds(event.seconds()).plus(GRACE);
         scheduler.schedule(() -> games.closeQuestionIfOpen(event.code(), event.number()), end);
+    }
+
+    @EventListener
+    void onSabotageOpened(GameEvent.SabotageOpened event) {
+        Instant end = Instant.now().plusSeconds(event.seconds());
+        scheduler.schedule(() -> games.nextQuestionIfSabotage(event.code(), event.number()), end);
     }
 
     @EventListener
