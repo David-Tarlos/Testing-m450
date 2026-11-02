@@ -64,6 +64,22 @@ export class GameSocketService implements OnDestroy {
     this.send(`/app/games/${this.watchedCode}/join`, { name });
   }
 
+  /** Das aktuelle Spiel verlassen, damit dieses Handy einem neuen beitreten kann. */
+  leave(): void {
+    this.rejoining = false;
+    this.joined.set(null);
+    writePlayer(null);
+    this.watchedCode = null;
+    if (this.connected()) {
+      this.gameSubscription?.unsubscribe();
+    }
+    this.gameSubscription = null;
+    this.view.set(EMPTY_VIEW);
+    this.lastAnswer.set(null);
+    this.lastCard.set(null);
+    this.error.set(null);
+  }
+
   answer(option: number): void {
     this.error.set(null);
     this.lastAnswer.set(null);
