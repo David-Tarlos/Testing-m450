@@ -1,4 +1,38 @@
-import { applyEvent, EMPTY_VIEW } from './game-view';
+import { applyEvent, applySnapshot, EMPTY_VIEW } from './game-view';
+
+describe('applySnapshot', () => {
+  const snapshot = {
+    code: 'ABCDEF', phase: 'QUESTION' as const, round: 2, total: 5, text: '2 + 2?', options: ['3', '4'],
+    secondsLeft: 7, correctOption: null, attacks: [],
+    players: ['Lena'], ranking: [{ name: 'Lena', score: 0, energy: 1 }],
+  };
+
+  it('setzt eine laufende Frage mit der restlichen Zeit wieder zusammen', () => {
+    const view = applySnapshot(snapshot);
+
+    expect(view.phase).toBe('QUESTION');
+    expect(view.question?.number).toBe(2);
+    expect(view.question?.seconds).toBe(7);
+    expect(view.players).toEqual(['Lena']);
+  });
+
+  it('hat in der Lobby keine Frage', () => {
+    const view = applySnapshot({ ...snapshot, phase: 'LOBBY', round: 0, text: null, options: [] });
+
+    expect(view.question).toBeNull();
+  });
+});
+
+describe('applyEvent Sabotage', () => {
+  it('merkt sich die Zeit der Sabotage-Phase', () => {
+    const view = applyEvent(EMPTY_VIEW, {
+      type: 'SabotageOpened', code: 'ABCDEF', number: 1, seconds: 10, ranking: [],
+    });
+
+    expect(view.phase).toBe('SABOTAGE');
+    expect(view.sabotageSeconds).toBe(10);
+  });
+});
 
 describe('applyEvent', () => {
   it('uebernimmt die Spielerliste beim Beitritt', () => {
