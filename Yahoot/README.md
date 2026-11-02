@@ -25,9 +25,25 @@ und legt die Reports als Artefakte ab. Ein neuer Push bricht den alten Lauf auf 
 Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind. Es bekommt neben
 `latest` auch den Commit-Hash als Tag, damit sich jede Version zurückverfolgen lässt.
 
-**Stand:** Das Spiel ist von der Lobby bis zum Sieger spielbar und mit 57 Unit-Tests und 12
-Integrationstests im Backend, 51 Unit-Tests im Frontend und 13 Playwright-Tests abgesichert. Das
+**Stand:** Das Spiel ist von der Lobby bis zum Sieger spielbar und mit 57 Unit-Tests und 15
+Integrationstests im Backend, 54 Unit-Tests im Frontend und 14 Playwright-Tests abgesichert. Das
 vollständige [Testkonzept](docs/testkonzept.md) und die [Schnittstelle](docs/api.md) sind dokumentiert.
+
+## Spiel starten
+
+```bash
+docker run -p 8080:8080 ghcr.io/david-tarlos/yahoot:latest
+# oder ohne Docker, nach dem Bauen wie unten beschrieben:
+java -jar backend/target/yahoot-0.0.1-SNAPSHOT.jar
+```
+
+Den Beamer nie über `localhost` öffnen: Der QR-Code und der Link zeigen sonst auf `localhost`, und die Handys
+kommen nicht ans Spiel. Stattdessen die Adresse nehmen, die auch die Handys erreichen, also die öffentliche
+Adresse beim Hosting oder die IP des Laptops (`http://192.168.x.x:8080/host`). Schul-WLANs blockieren
+Verbindungen zwischen Geräten oft. Dann hilft der Hotspot eines Handys, mit dem sich alle verbinden.
+
+Beim Hosting den Port über die Umgebungsvariable `PORT` setzen, falls der Anbieter ihn vorgibt. Der Anbieter muss
+WebSockets unterstützen.
 
 ## Tests lokal ausführen
 
