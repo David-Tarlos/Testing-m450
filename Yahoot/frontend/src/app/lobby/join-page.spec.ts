@@ -38,6 +38,27 @@ describe('JoinPage', () => {
     expect(element.querySelector('[role=alert]')?.textContent).toContain('Kein Spiel');
   });
 
+  describe('mit einem gespeicherten Spieler', () => {
+    function open(code: string) {
+      socket.joined.set({ code: 'ABC234', name: 'Lena', playerToken: 'token' });
+      const page = TestBed.createComponent(JoinPage);
+      page.componentRef.setInput('code', code);
+      page.detectChanges();
+    }
+
+    it('verlaesst das alte Spiel, wenn der Link zu einem neuen fuehrt', () => {
+      open('xyz789');
+
+      expect(socket.leave).toHaveBeenCalled();
+    });
+
+    it('bleibt im Spiel, wenn der Link zum selben Spiel fuehrt', () => {
+      open('abc234');
+
+      expect(socket.leave).not.toHaveBeenCalled();
+    });
+  });
+
   it('wartet nach dem Beitritt mit den anderen auf den Start', async () => {
     socket.joined.set({ code: 'ABC234', name: 'Lena', playerToken: 'token' });
     socket.view.set({ ...EMPTY_VIEW, players: ['Lena', 'Tim'] });
