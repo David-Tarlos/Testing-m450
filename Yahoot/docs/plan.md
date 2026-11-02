@@ -64,9 +64,9 @@ flowchart LR
 | Ebene | Werkzeug | Inhalt | Umfang |
 |---|---|---|---|
 | Unit Backend | JUnit, AssertJ, Mockito | Spielregeln, GameService mit Mocks | 57 (geplant ca. 25) |
-| Unit Frontend | Vitest | Dumb Components, Container mit gemocktem Service | 51 (geplant ca. 15) |
-| Integration | Spring Boot Test | echter WebSocket-Client gegen den echten Server | 12 (geplant ca. 6–8) |
-| End-to-End | Playwright | Host und Handys im Browser | 13 (geplant ca. 12) |
+| Unit Frontend | Vitest | Dumb Components, Container mit gemocktem Service | 54 (geplant ca. 15) |
+| Integration | Spring Boot Test | echter WebSocket-Client gegen den echten Server | 15 (geplant ca. 6–8) |
+| End-to-End | Playwright | Host und Handys im Browser | 14 (geplant ca. 12) |
 
 Die Unit-Tests sind deutlich mehr geworden als geplant, weil beim Bauen viele Randfälle dazukamen. Details
 stehen im [Testkonzept](testkonzept.md).
@@ -86,7 +86,7 @@ Jedes Paket wird ein eigener Pull Request.
 | 4 | Frontend Lobby | Socket-Service, Host-Ansicht, Beitreten | fertig |
 | 5 | Frontend Spiel | Fragen, Sabotage-Karten, Rangliste | fertig |
 | 6 | End-to-End | 12 Playwright-Tests, Rejoin | fertig |
-| 7 | Abschluss | Hosting, Testkonzept anpassen, Reflexion, Präsentation | Testkonzept fertig, der Rest offen |
+| 7 | Abschluss | Hosting, Testkonzept anpassen, Reflexion, Präsentation | Testkonzept fertig, Reflexion und Präsentation als Entwurf, Hosting offen |
 
 ## Scope und Zeit
 
@@ -103,4 +103,5 @@ Projekts und die Bewertung ausmachen.
   Eckdaten im Original müssen noch abgeglichen werden.
 - Der Hosting-Anbieter ist noch nicht gewählt. Die Pipeline veröffentlicht vorerst ein Docker-Image.
 - Das Spiel lief bisher nur in emulierten Handys in Playwright, noch nicht auf echten Geräten.
-- Reflexion zu TDD und Code Reviews und die Präsentation fehlen noch.
+- In der [Reflexion](reflexion.md) fehlt noch unsere eigene Sicht, die [Präsentation](praesentation.md) ist nur als
+  Ablauf geplant.

@@ -15,6 +15,7 @@ export function fakeSocket() {
     error: signal<string | null>(null),
     watch: vi.fn(),
     join: vi.fn(),
+    leave: vi.fn(),
     answer: vi.fn(),
     playCard: vi.fn(),
     host: vi.fn(),

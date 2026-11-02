@@ -69,6 +69,7 @@ import { RankingList } from './ranking-list';
       @case ('FINISHED') {
         <h2>Du bist Platz {{ place() }}!</h2>
         <app-ranking-list [ranking]="view().ranking" [me]="name()" />
+        <button type="button" (click)="socket.leave()">Neues Spiel</button>
       }
     }
     @if (socket.error(); as error) {

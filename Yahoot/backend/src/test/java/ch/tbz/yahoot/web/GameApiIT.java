@@ -127,6 +127,23 @@ class GameApiIT {
     }
 
     @Test
+    void tokenAndPlayerOfOneGameAreNotValidInAnother() throws Exception {
+        String first = (String) createGame("test-langsam").get("code");
+        Map<String, Object> second = createGame("test-langsam");
+        String secondCode = (String) second.get("code");
+        Inbox joined = phone.subscribe("/user/queue/joined");
+        Inbox errors = phone.subscribe("/user/queue/errors");
+        phone.send("/app/games/" + first + "/join", Map.of("name", "Lena"));
+        String token = (String) joined.next().get("playerToken");
+
+        phone.send("/app/games/" + secondCode + "/answer", Map.of("option", 1));
+        assertThat(errors.next().get("message")).asString().contains("noch nicht beigetreten");
+
+        phone.send("/app/games/" + secondCode + "/rejoin", Map.of("playerToken", token));
+        assertThat(errors.next().get("message")).asString().contains("wieder verbinden");
+    }
+
+    @Test
     void playedCardIsConfirmedToThePlayer() throws Exception {
         Map<String, Object> game = createGame("test-langsam");
         String code = (String) game.get("code");

@@ -180,11 +180,34 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Image bauen, auf main auch veroeffentlichen
+      - name: Image bauen
         uses: docker/build-push-action@v6
         with:
           context: Yahoot
-          push: ${{ github.ref == 'refs/heads/main' }}
+          load: true
+          tags: yahoot:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # Playwright testet das JAR. Hier zeigt sich, ob auch das Image startet und das Frontend ausliefert.
+      - name: Image starten und pruefen
+        run: |
+          docker run -d --name yahoot -e PORT=9090 -p 9090:9090 yahoot:test
+          for i in $(seq 1 30); do
+            curl -fs http://localhost:9090/actuator/health | grep -q UP && break
+            sleep 2
+          done
+          curl -fs http://localhost:9090/actuator/health | grep -q UP
+          curl -fs http://localhost:9090/join | grep -q '<app-root'
+          curl -fs http://localhost:9090/api/quizzes | grep -q allgemeinwissen
+      - name: Log des Containers bei Fehlern
+        if: failure()
+        run: docker logs yahoot || true
+      - name: Image auf main veroeffentlichen
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: Yahoot
+          push: true
           tags: |
             ghcr.io/david-tarlos/yahoot:latest
             ghcr.io/david-tarlos/yahoot:${{ github.sha }}

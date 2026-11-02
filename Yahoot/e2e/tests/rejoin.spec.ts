@@ -16,6 +16,22 @@ test('Neu laden auf Handy und Beamer fuehrt zurueck ins laufende Spiel', async (
   await expect(page.locator('app-answer-buttons .correct')).toHaveText('26');
 });
 
+test('Link zu einem neuen Spiel fuehrt im selben Tab nicht ins alte zurueck', async ({ page, browser }) => {
+  const first = await hostGame(page);
+  const tim = await joinAs(browser, first, 'Tim');
+
+  // Das neue Spiel eroeffnet ein zweiter Beamer, das erste laeuft weiter.
+  const secondHost = await page.context().newPage();
+  const second = await hostGame(secondHost);
+  await tim.goto(`/join?code=${second}`);
+
+  await expect(tim.getByLabel('Spielcode')).toHaveValue(second);
+  await tim.getByLabel('Dein Name').fill('Tim');
+  await tim.getByRole('button', { name: 'Mitspielen' }).click();
+  await expect(tim.getByRole('heading', { name: 'Hallo Tim!' })).toBeVisible();
+  await expect(secondHost.getByRole('listitem').filter({ hasText: 'Tim' })).toBeVisible();
+});
+
 test('Nach einem Abbruch holt das Handy Verpasstes nach und spielt weiter', async ({ page, browser }) => {
   const code = await hostGame(page);
   const lena = await joinAs(browser, code, 'Lena');

@@ -133,4 +133,13 @@ describe('PlayerGame', () => {
 
     expect(element.textContent).toContain('Platz 2');
   });
+
+  it('kann nach dem Spiel einem neuen beitreten', () => {
+    socket.view.set({ ...EMPTY_VIEW, phase: 'FINISHED', ranking });
+    fixture.detectChanges();
+
+    [...element.querySelectorAll('button')].find((button) => button.textContent?.includes('Neues Spiel'))!.click();
+
+    expect(socket.leave).toHaveBeenCalled();
+  });
 });

@@ -46,9 +46,9 @@ flowchart LR
 | Ebene | Werkzeug | Inhalt | Anzahl |
 |---|---|---|---|
 | Unit Backend | JUnit, AssertJ, Mockito | Punkte, Energie, alle Karten, Rundenablauf, Randfälle, GameService, Timer | 57 |
-| Unit Frontend | Vitest | Dumb Components, reine Logik, Container mit gefaktem Socket-Service | 51 |
-| Integration | Spring Boot Test | echter STOMP-Client gegen den echten Server: Rundenablauf, Rechte, Rejoin, Timer | 12 |
-| End-to-End | Playwright | ganzes Spiel, alle vier Karten, Lobby, Neuladen und Verbindungsabbruch | 13 |
+| Unit Frontend | Vitest | Dumb Components, reine Logik, Container mit gefaktem Socket-Service | 54 |
+| Integration | Spring Boot Test | echter STOMP-Client gegen den echten Server: Rundenablauf, Rechte, Rejoin, Timer, HTTPS-Proxy | 15 |
+| End-to-End | Playwright | ganzes Spiel, alle vier Karten, Lobby, Neuladen, Verbindungsabbruch, zweites Spiel im selben Tab | 14 |
 
 **Gemockt** werden im Backend `QuizRepository`, `GameEventPublisher`, `Clock` und im Timer-Test der
 `GameService`, im Frontend der `GameSocketService` und der `GameApiService`. So laufen die Tests schnell und
@@ -59,7 +59,7 @@ hängen nicht von echter Zeit oder einem Server ab.
 | Nicht getestet | Begründung |
 |---|---|
 | Echte Handys und andere Browser | Playwright emuliert ein Pixel 7 in Chromium. Safari auf dem iPhone ist nicht abgedeckt, das prüfen wir von Hand vor der Präsentation |
-| Das Docker-Image selbst | Playwright testet das JAR. Das Image wird nur gebaut, das Risiko ist klein, weil dasselbe JAR darin steckt |
+| Das Spiel im Docker-Image | Playwright testet das JAR. Die Pipeline startet das Image und prüft nur, ob Server, Frontend und Quiz antworten, weil dasselbe JAR darin steckt |
 | Last mit vielen Spielern | für eine Runde im Klassenzimmer nicht nötig, kein Lasttest geplant |
 | Spring, Angular, STOMP-Bibliotheken | fremder Code |
 | Barrierefreiheit | keine Anforderung, nur Grundlagen wie Beschriftungen und Rollen sind umgesetzt |
@@ -74,10 +74,17 @@ Zwei Dinge dazu ehrlich: Um die Commit-Anzahl klein zu halten, fassen wir Rot un
 Die meisten roten Commits scheitern deshalb am Kompilieren, nicht an einer einzelnen Zusicherung. Die
 Playwright-Tests sind erst nach der Oberfläche entstanden, sind also kein TDD.
 
-Ob die Tests etwas taugen, haben wir mit einer **Gegenprobe** geprüft: Wir haben absichtlich sechs Fehler
-eingebaut, zum Beispiel ein wirkungsloses Freeze oder ein Rejoin ohne Tokenprüfung. Dabei fiel auf, dass der
-Playwright-Test fürs Schild auch bei wirkungslosem Schild grün blieb. Er wartete automatisch bis zu 5 Sekunden,
-der Freeze dauert aber nur 3. Jetzt prüft er sofort und findet den Fehler.
+Ob die Tests etwas taugen, haben wir mit einer **Gegenprobe** geprüft: Wir haben absichtlich Fehler eingebaut,
+zum Beispiel ein wirkungsloses Freeze oder ein Rejoin ohne Tokenprüfung. Das hat zwei Lücken aufgedeckt, die
+beide geschlossen sind:
+
+- Der Playwright-Test fürs Schild blieb auch bei wirkungslosem Schild grün. Er wartete automatisch bis zu 5
+  Sekunden, der Freeze dauert aber nur 3. Jetzt prüft er sofort.
+- Kein Test prüfte, ob Token und Spieler aus einem anderen Spiel abgelehnt werden. Der Code war richtig, aber
+  ungeschützt.
+
+Auch die Gegenprobe selbst kann täuschen: Ein Lauf meldete «gefunden», obwohl Maven wegen eines falschen
+Parameters gar keine Tests gestartet hatte. Seither schauen wir bei jedem roten Lauf auf den Grund.
 
 ## 6 Kriterien
 
@@ -100,6 +107,6 @@ Pipeline rot, und es wird nichts veröffentlicht. Ein festes Coverage-Gate gibt 
 |---|---|
 | Während der Entwicklung | der betroffene Unit-Test |
 | Jeder Push und Pull Request | alle Tests, Reports als Artefakte |
-| Push auf einen Branch | zusätzlich wird das Docker-Image gebaut |
+| Push auf einen Branch | zusätzlich wird das Docker-Image gebaut und kurz gestartet |
 | Push auf `main` | zusätzlich wird das Image veröffentlicht, wenn alles grün ist |
 | Vor der Präsentation | ein Spiel von Hand mit echten Handys |
