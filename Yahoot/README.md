@@ -20,8 +20,10 @@ Schichten darüber prüfen wir nur so weit, dass das Zusammenspiel sicher funkti
 Gemockt werden Quiz-Quelle, Event-Versand und Uhr im Backend sowie der Socket-Service im Frontend. So
 sind die Tests schnell und hängen nicht von echter Zeit ab.
 
-Die Pipeline (`.github/workflows/yahoot.yml`) führt bei jedem Push alle Tests aus und legt die Reports
-als Artefakte ab. Das Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind.
+Die Pipeline (`.github/workflows/yahoot.yml`) führt bei jedem Push und jedem Pull Request alle Tests aus
+und legt die Reports als Artefakte ab. Ein neuer Push bricht den alten Lauf auf demselben Branch ab. Das
+Docker-Image wird nur auf `main` veröffentlicht, und nur wenn alle Tests grün sind. Es bekommt neben
+`latest` auch den Commit-Hash als Tag, damit sich jede Version zurückverfolgen lässt.
 
 **Stand:** Die Spielregeln sind nach TDD umgesetzt und getestet. Die Tabelle beschreibt das Ziel:
 GameService mit Mocks, WebSocket-Integration, Oberfläche und die meisten Playwright-Tests kommen mit den
