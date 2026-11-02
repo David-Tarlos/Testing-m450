@@ -21,7 +21,7 @@ Aufgaben und die **tatsächlich gemessenen** Ergebnisse.
 | [7](7-cicd-pipelines/) | CI/CD + Deployment Environments | ✅ | 42 Tests, 95,1 % Coverage, Pipeline grün |
 | [8](8-code-reviews/) | Code Reviews | ✅ | 2 × 3 PRs verglichen, Entscheidungen dokumentiert, 1 Bug gefunden |
 | [9](9-test-driven-development/) | Test Driven Development | ✅ | 3 Tests / 27 Asserts grün, 7 Spielräume dokumentiert |
-| Modulprojekt | eigenes Projekt | ⬜ | offen |
+| [Modulprojekt](Yahoot/) | Yahoot, Live-Quiz mit Sabotage | 🔄 | spielbar, Hosting, Reflexion und Präsentation offen |
 
 **Tests im Repository gesamt: 241**, alle grün.
 
@@ -282,7 +282,9 @@ waren schon 2 Asserts erfüllt.
 
 ---
 
-## Modulprojekt — offen
+## Modulprojekt — Yahoot
+
+📁 [`Yahoot/`](Yahoot/) · 📄 [Plan](Yahoot/docs/plan.md) · 📄 [Testkonzept](Yahoot/docs/testkonzept.md)
 
 Laut `Unterlagen/projekt/` im Kurs-Repository ist ein **eigenes Projekt** zu realisieren:
 

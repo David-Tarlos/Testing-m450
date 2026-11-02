@@ -63,10 +63,13 @@ flowchart LR
 
 | Ebene | Werkzeug | Inhalt | Umfang |
 |---|---|---|---|
-| Unit Backend | JUnit, AssertJ, Mockito | Spielregeln, GameService mit Mocks | ca. 25 |
-| Unit Frontend | Vitest | Dumb Components, Container mit gemocktem Service | ca. 15 |
-| Integration | Spring Boot Test | echter WebSocket-Client gegen den echten Server | ca. 6–8 |
-| End-to-End | Playwright | Host und Handys im Browser | ca. 12 |
+| Unit Backend | JUnit, AssertJ, Mockito | Spielregeln, GameService mit Mocks | 57 (geplant ca. 25) |
+| Unit Frontend | Vitest | Dumb Components, Container mit gemocktem Service | 51 (geplant ca. 15) |
+| Integration | Spring Boot Test | echter WebSocket-Client gegen den echten Server | 12 (geplant ca. 6–8) |
+| End-to-End | Playwright | Host und Handys im Browser | 13 (geplant ca. 12) |
+
+Die Unit-Tests sind deutlich mehr geworden als geplant, weil beim Bauen viele Randfälle dazukamen. Details
+stehen im [Testkonzept](testkonzept.md).
 
 TDD setzen wir bei Spielregeln und GameService konsequent um: Erst kommt der rote Test in einen eigenen
 Commit, dann die Implementierung. Bei reinem UI-Aufbau ist TDD erlaubt, aber nicht Pflicht.
@@ -75,15 +78,15 @@ Commit, dann die Implementierung. Bei reinem UI-Aufbau ist TDD erlaubt, aber nic
 
 Jedes Paket wird ein eigener Pull Request.
 
-| # | Paket | Inhalt |
-|---|---|---|
-| 1 | Setup | Grundgerüst, Reports, Pipeline |
-| 2 | Spielregeln | Punkte, Energie, Karten, Rundenablauf mit TDD |
-| 3 | Backend live | Spiele und Lobby, WebSocket, Integrationstests |
-| 4 | Frontend Lobby | Socket-Service, Host-Ansicht, Beitreten |
-| 5 | Frontend Spiel | Fragen, Sabotage-Karten, Rangliste |
-| 6 | End-to-End | 12 Playwright-Tests, Rejoin |
-| 7 | Abschluss | Hosting, Testkonzept anpassen, Reflexion, Präsentation |
+| # | Paket | Inhalt | Stand |
+|---|---|---|---|
+| 1 | Setup | Grundgerüst, Reports, Pipeline | fertig |
+| 2 | Spielregeln | Punkte, Energie, Karten, Rundenablauf mit TDD | fertig |
+| 3 | Backend live | Spiele und Lobby, WebSocket, Integrationstests | fertig |
+| 4 | Frontend Lobby | Socket-Service, Host-Ansicht, Beitreten | fertig |
+| 5 | Frontend Spiel | Fragen, Sabotage-Karten, Rangliste | fertig |
+| 6 | End-to-End | 12 Playwright-Tests, Rejoin | fertig |
+| 7 | Abschluss | Hosting, Testkonzept anpassen, Reflexion, Präsentation | Testkonzept fertig, der Rest offen |
 
 ## Scope und Zeit
 
@@ -99,3 +102,5 @@ Projekts und die Bewertung ausmachen.
 - Die Anforderungen stammen aus der Projektbeschreibung und der Zusammenfassung im Haupt-README. Die
   Eckdaten im Original müssen noch abgeglichen werden.
 - Der Hosting-Anbieter ist noch nicht gewählt. Die Pipeline veröffentlicht vorerst ein Docker-Image.
+- Das Spiel lief bisher nur in emulierten Handys in Playwright, noch nicht auf echten Geräten.
+- Reflexion zu TDD und Code Reviews und die Präsentation fehlen noch.

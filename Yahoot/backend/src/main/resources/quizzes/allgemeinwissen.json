@@ -1,0 +1,11 @@
+{
+  "title": "Allgemeinwissen Schweiz",
+  "questions": [
+    { "text": "Wie viele Kantone hat die Schweiz?", "options": ["23", "24", "26", "28"], "correct": 2, "seconds": 20 },
+    { "text": "Welcher Fluss fliesst durch Basel?", "options": ["Aare", "Rhein", "Rhone", "Limmat"], "correct": 1, "seconds": 15 },
+    { "text": "Wie heisst der höchste Berg der Schweiz?", "options": ["Matterhorn", "Eiger", "Dufourspitze", "Säntis"], "correct": 2, "seconds": 20 },
+    { "text": "In welchem Jahr wurde der Bundesstaat gegründet?", "options": ["1291", "1648", "1848", "1874"], "correct": 2, "seconds": 20 },
+    { "text": "Welche Stadt ist Sitz der Bundesversammlung?", "options": ["Zürich", "Bern", "Genf", "Luzern"], "correct": 1, "seconds": 10 },
+    { "text": "Wie viele Landessprachen hat die Schweiz?", "options": ["2", "3", "4", "5"], "correct": 2, "seconds": 15 }
+  ]
+}

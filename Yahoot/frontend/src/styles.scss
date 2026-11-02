@@ -1,1 +1,62 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #fdfbff;
+  --text: #1d1530;
+  --muted: #6b6280;
+  --accent: #6c2bd9;
+  --accent-text: #ffffff;
+  --chip: #ece6f7;
+  --danger: #c0262d;
+  --success: #12823f;
+  --answer-0: #b4232a;
+  --answer-1: #1d5fc4;
+  --answer-2: #8a6100;
+  --answer-3: #197a3e;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15111f;
+    --text: #f1edf9;
+    --muted: #a69dbb;
+    --accent: #9b6bff;
+    --accent-text: #15111f;
+    --chip: #2a2240;
+    --danger: #ff7a7f;
+    --success: #4ade80;
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+}
+
+button,
+.button {
+  display: inline-block;
+  border: 2px solid var(--accent);
+  border-radius: .6rem;
+  background: transparent;
+  color: var(--accent);
+  padding: .7rem 1.3rem;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.primary,
+.button.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
