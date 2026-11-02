@@ -28,6 +28,38 @@ class GameLobbyTest {
     }
 
     @Test
+    void questionNeedsAPositiveTimeLimit() {
+        assertThatThrownBy(() -> new Question("?", List.of("a", "b"), 0, Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Question("?", List.of("a", "b"), 0, Duration.ofSeconds(-5)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Question("?", List.of("a", "b"), 0, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void questionNeedsAtLeastTwoOptions() {
+        assertThatThrownBy(() -> new Question("?", List.of("a"), 0, Duration.ofSeconds(20)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void nameMustNotBeEmpty() {
+        assertThatThrownBy(() -> game.join(null)).isInstanceOf(GameRuleException.class);
+        assertThatThrownBy(() -> game.join("   ")).isInstanceOf(GameRuleException.class);
+        assertThat(game.ranking()).isEmpty();
+    }
+
+    @Test
+    void nameIsTrimmedAndLimitedTo20Characters() {
+        game.join("  Lena  ");
+
+        assertThat(game.player("Lena").name()).isEqualTo("Lena");
+        assertThatThrownBy(() -> game.join(" lena")).isInstanceOf(GameRuleException.class);
+        assertThatThrownBy(() -> game.join("A".repeat(21))).isInstanceOf(GameRuleException.class);
+    }
+
+    @Test
     void nameCanOnlyBeUsedOnceIgnoringCase() {
         game.join("Lena");
 

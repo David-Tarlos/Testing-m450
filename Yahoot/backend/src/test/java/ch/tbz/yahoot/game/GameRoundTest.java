@@ -51,6 +51,14 @@ class GameRoundTest {
     }
 
     @Test
+    void answerOutsideTheOptionsIsRejectedAndDoesNotCount() {
+        assertThat(game.answer("Lena", 2, START)).isEqualTo(AnswerResult.INVALID_OPTION);
+        assertThat(game.answer("Lena", -1, START)).isEqualTo(AnswerResult.INVALID_OPTION);
+
+        assertThat(game.answer("Lena", RIGHT, START)).isEqualTo(AnswerResult.ACCEPTED);
+    }
+
+    @Test
     void answerAfterTheTimeLimitIsRejected() {
         assertThat(game.answer("Lena", RIGHT, START.plus(LIMIT).plusMillis(1)))
                 .isEqualTo(AnswerResult.TOO_LATE);
