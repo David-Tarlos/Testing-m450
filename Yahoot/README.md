@@ -64,7 +64,6 @@ Fehler von npm 11.4.2, `npx npm@11.21.1 install` funktioniert. `npm ci` ist davo
 
 ## KI-Nutzung
 
-Wir nutzen einen KI-Agenten als Werkzeug. Idee, Technologien, Anforderungen und Umfang geben wir vor, und
-wir entscheiden, was ins Projekt kommt: Jedes Paket übernehmen wir über einen eigenen Pull Request.
+Wir nutzen einen KI-Agenten als Werkzeug. Idee, Technologien, Anforderungen und Umfang besprechen wir mit KI mit der Hoffnung eine gute Planung zu erhaltne, beim tdd sind wir geziel vorgegangen KI wengi zu nutzen. WIr haben für erklärung, teilweise für wiederholende Tests, die im prinzip gleich sin,d einfach andere funktionialitäten getestet werden. Wir haben mit KI zusamemngearbeitet. Schlussneldich haben wir natürlcih alles in Pull requests geschrieben und auch selber über den code reveiwet
 
 Der Agent erstellt nach diesen Vorgaben Code, Tests und Dokumentation.
